@@ -76,7 +76,8 @@
 		<div class="mt-8 text-center">
 			<a
 				href="/getaway-guide"
-				class="inline-flex items-center gap-2 rounded-md bg-[var(--accent)] px-6 py-3 font-semibold text-white transition-colors hover:opacity-90"
+				class="inline-flex items-center gap-2 rounded-md bg-[var(--accent)] px-6 py-3 font-semibold transition-colors hover:opacity-90"
+				style="color: white !important;"
 			>
 				Start Planning Your Trip
 			</a>
