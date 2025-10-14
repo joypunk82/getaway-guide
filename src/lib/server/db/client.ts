@@ -1,4 +1,4 @@
-import { put, del, head } from '@vercel/blob';
+import { put, del, head, list } from '@vercel/blob';
 import type { GetawayGuideSession } from '$lib/types/getaway-guide';
 
 /**
@@ -24,17 +24,21 @@ export async function getSession(sessionId: string): Promise<SessionData | null>
 			return inMemorySessions.get(sessionId) || null;
 		}
 
-		const response = await fetch(`https://blob.vercel-storage.com/sessions/${sessionId}.json`, {
-			headers: {
-				'Authorization': `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}`
-			}
-		});
+		// Use Vercel blob SDK properly
+		const blobs = await list({ prefix: `sessions/${sessionId}.json`, limit: 1 });
 		
+		if (blobs.blobs.length === 0) {
+			return null;
+		}
+
+		const response = await fetch(blobs.blobs[0].url);
 		if (!response.ok) {
 			return null;
 		}
+		
 		return await response.json();
-	} catch {
+	} catch (error) {
+		console.error('Error getting session from blob storage:', error);
 		return null;
 	}
 }
@@ -59,13 +63,21 @@ export async function saveSession(sessionId: string, sessionData: GetawayGuideSe
 
 	// For development, use in-memory store as fallback
 	if (!process.env.BLOB_READ_WRITE_TOKEN) {
+		console.log('Saving session to in-memory store (no BLOB_READ_WRITE_TOKEN)');
 		inMemorySessions.set(sessionId, data);
 		return;
 	}
 
-	await put(`sessions/${sessionId}.json`, JSON.stringify(data), {
-		access: 'public'
-	});
+	try {
+		console.log('Saving session to blob storage:', sessionId);
+		await put(`sessions/${sessionId}.json`, JSON.stringify(data), {
+			access: 'public'
+		});
+		console.log('Session saved successfully to blob storage');
+	} catch (error) {
+		console.error('Error saving session to blob storage:', error);
+		throw error;
+	}
 }
 
 /**
