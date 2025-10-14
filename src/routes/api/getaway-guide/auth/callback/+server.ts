@@ -32,8 +32,12 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 	}
 
 	try {
+		console.log('[DEBUG] Attempting token exchange...');
 		const tokenData = await exchangeCodeForToken(code);
+		console.log('[DEBUG] Token exchange successful');
+		
 		saveTokens(cookies, tokenData);
+		console.log('[DEBUG] Tokens saved');
 
 		// Clear OAuth cookies
 		cookies.delete('oauth_state', { path: '/' });
@@ -44,7 +48,9 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 
 		throw redirect(303, redirectTo);
 	} catch (err) {
-		console.error('Token exchange error:', err);
+		console.error('[ERROR] Token exchange failed:', err);
+		console.error('[ERROR] Error message:', err instanceof Error ? err.message : 'Unknown error');
+		console.error('[ERROR] Full error object:', JSON.stringify(err, null, 2));
 		throw redirect(303, '/getaway-guide?auth_error=token_exchange_failed');
 	}
 };
