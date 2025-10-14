@@ -3,9 +3,16 @@ import { redirect, error } from '@sveltejs/kit';
 import { exchangeCodeForToken, saveTokens } from '$lib/server/getaway-guide/oauth';
 
 export const GET: RequestHandler = async ({ url, cookies }) => {
+	console.log('[DEBUG] OAuth callback reached');
+	console.log('[DEBUG] Full URL:', url.toString());
+	
 	const code = url.searchParams.get('code');
 	const state = url.searchParams.get('state');
 	const errorParam = url.searchParams.get('error');
+
+	console.log('[DEBUG] Code:', code ? 'present' : 'missing');
+	console.log('[DEBUG] State:', state);
+	console.log('[DEBUG] Error param:', errorParam);
 
 	// Check for OAuth errors
 	if (errorParam) {
