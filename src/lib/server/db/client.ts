@@ -39,7 +39,8 @@ export async function getSession(sessionId: string): Promise<SessionData | null>
 			}
 			
 			const data = await response.json();
-			console.log('[DEBUG] Successfully retrieved session data');
+			console.log('[DEBUG] Successfully retrieved session data - locations count:', data.sessionData.locations.length);
+			console.log('[DEBUG] Location IDs in retrieved session:', data.sessionData.locations.map((l: any) => l.id));
 			return data;
 		} catch (headError) {
 			console.log('[DEBUG] Blob does not exist or head failed:', headError);
