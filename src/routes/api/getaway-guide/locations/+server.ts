@@ -1,16 +1,19 @@
-import type { RequestHandler } from './$types';
-import { json } from '@sveltejs/kit';
 import {
+	addLocation,
 	getGetawayGuideSession,
-	saveGetawayGuideSession,
-	addLocation
+	saveGetawayGuideSession
 } from '$lib/server/getaway-guide/session';
 import { createLocationSchema } from '$lib/server/validation/getaway-guide';
+import { json } from '@sveltejs/kit';
 import { z } from 'zod';
+import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ cookies }) => {
 	try {
+		console.log('[DEBUG] GET /api/getaway-guide/locations - fetching session');
 		const session = await getGetawayGuideSession(cookies);
+		console.log('[DEBUG] Session loaded - locations count:', session.locations.length);
+		console.log('[DEBUG] Location details:', session.locations.map(l => ({ id: l.id, name: l.name, sites: l.sites.length })));
 		return json({ success: true, locations: session.locations });
 	} catch (error) {
 		console.error('Failed to get locations:', error);

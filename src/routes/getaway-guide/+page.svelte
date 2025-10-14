@@ -1,11 +1,11 @@
 <script lang="ts">
-	import type { PageData } from './$types';
-	import type { Location } from '$lib/types/getaway-guide';
+	import { resolve } from '$app/paths';
+	import GuideImporter from '$lib/features/getaway-guide/components/GuideImporter.svelte';
 	import LocationCard from '$lib/features/getaway-guide/components/LocationCard.svelte';
 	import LocationForm from '$lib/features/getaway-guide/components/LocationForm.svelte';
 	import SiteForm from '$lib/features/getaway-guide/components/SiteForm.svelte';
-	import GuideImporter from '$lib/features/getaway-guide/components/GuideImporter.svelte';
-	import { resolve } from '$app/paths';
+	import type { Location } from '$lib/types/getaway-guide';
+	import type { PageData } from './$types';
 
 	let { data } = $props<{ data: PageData }>();
 
@@ -67,10 +67,12 @@
 			if (!response.ok) {
 				const errorData = await response.json().catch(() => ({}));
 				console.error('Failed to add site:', errorData);
-				
+
 				// Check if it's a cookie size issue
 				if (response.status === 400 && errorData.message?.includes('cookie')) {
-					alert('Session storage limit reached. This is a cookie size limitation. Please start a new session or reduce the number of locations/sites.');
+					alert(
+						'Session storage limit reached. This is a cookie size limitation. Please start a new session or reduce the number of locations/sites.'
+					);
 				} else {
 					alert('Failed to add site. Please try again.');
 				}
@@ -132,10 +134,14 @@
 	async function handleImportSuccess() {
 		// Fetch updated locations from server
 		try {
+			console.log('[DEBUG] Import success - fetching updated locations');
 			const response = await fetch('/api/getaway-guide/locations');
 			if (response.ok) {
 				const data = await response.json();
+				console.log('[DEBUG] Received locations data:', data);
+				console.log('[DEBUG] Current locations before update:', locations.length);
 				locations = data.locations;
+				console.log('[DEBUG] Updated locations:', locations.length);
 			} else {
 				console.error('Failed to fetch updated locations after import');
 				// Fallback to page reload if API call fails
@@ -195,11 +201,7 @@
 			<div class="space-y-4">
 				{#each locations as location (location.id)}
 					<div class="space-y-2">
-						<LocationCard
-							{location}
-							onDelete={handleDeleteLocation}
-							onAddSite={openAddSiteForm}
-						/>
+						<LocationCard {location} onDelete={handleDeleteLocation} onAddSite={openAddSiteForm} />
 						{#if addingSiteToLocationId === location.id}
 							<SiteForm
 								locationId={location.id}
@@ -219,12 +221,14 @@
 		<section class="rounded-lg border border-[var(--border)] bg-[var(--card)] p-6">
 			<h2 class="mb-2 text-lg font-semibold">Ready to Search?</h2>
 			<p class="mb-4 text-sm text-[var(--muted-foreground)]">
-				We'll search YouTube for videos based on your locations and sites. This will help you
-				discover content for your vacation planning.
+				We'll search YouTube for videos based on your locations and sites. This will help you discover
+				content for your vacation planning.
 			</p>
 
 			{#if searchError}
-				<div class="mb-4 rounded-md bg-[var(--destructive-muted)] p-3 text-sm text-[var(--destructive)]">
+				<div
+					class="mb-4 rounded-md bg-[var(--destructive-muted)] p-3 text-sm text-[var(--destructive)]"
+				>
 					{searchError}
 				</div>
 			{/if}
@@ -236,7 +240,7 @@
 			>
 				{isSearching ? 'Searching...' : 'Search for Videos'}
 			</button>
-			
+
 			{#if !hasLocationWithSites}
 				<p class="mt-2 text-xs text-[var(--muted-foreground)]">
 					Add at least one site to a location to enable search

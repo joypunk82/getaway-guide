@@ -53,7 +53,13 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		}
 
 		// Save updated session
+		console.log('[DEBUG] Import - saving session with locations:', session.locations.length);
+		session.locations.forEach((loc, index) => {
+			console.log(`[DEBUG] Location ${index}: ${loc.name} (${loc.sites.length} sites)`);
+		});
+		
 		await saveGetawayGuideSession(cookies, session);
+		console.log('[DEBUG] Import - session saved successfully');
 
 		return json({
 			success: true,
