@@ -1,0 +1,62 @@
+/* Design tokens: light/dark, spacing, radius, shadows */
+@layer theme {
+	:root {
+		--bg: hsl(0 0% 99%);
+		--bg-muted: hsl(210 20% 98%);
+		--card: hsl(0 0% 100%);
+		--card-foreground: hsl(222.2 84% 4.9%);
+		--muted: hsl(210 40% 96.1%);
+		--muted-foreground: hsl(215.4 16.3% 46.9%);
+		--border: hsl(214.3 31.8% 91.4%);
+		--ring: hsl(222.2 84% 4.9%);
+		--accent: hsl(221 83% 53%);
+		--accent-foreground: white;
+
+		/* Status colors */
+		--success: hsl(142 76% 36%);
+		--success-foreground: hsl(355 7% 97%);
+		--success-muted: hsl(143 85% 96%);
+		--warning: hsl(38 92% 50%);
+		--warning-foreground: hsl(48 96% 89%);
+		--warning-muted: hsl(48 100% 96%);
+		--destructive: hsl(0 72% 51%);
+		--destructive-foreground: hsl(0 0% 98%);
+		--destructive-muted: hsl(0 93% 94%);
+		--info: hsl(221 83% 53%);
+		--info-foreground: hsl(0 0% 98%);
+		--info-muted: hsl(214 95% 93%);
+
+		--radius: 0.75rem;
+		--radius-sm: 0.5rem;
+		--shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+		--shadow: 0 8px 24px -12px rgb(2 6 23 / 0.15);
+		--shadow-lg: 0 20px 50px -20px rgb(2 6 23 / 0.25);
+	}
+
+	.dark {
+		--bg: hsl(222 50% 5%);
+		--bg-muted: hsl(222 45% 7%);
+		--card: hsl(224 40% 8%);
+		--card-foreground: hsl(210 40% 96%);
+		--muted: hsl(215 28% 17%);
+		--muted-foreground: hsl(217 15% 70%);
+		--border: hsl(217 33% 17%);
+		--ring: hsl(212 100% 68%);
+		--accent: hsl(212 100% 68%);
+		--accent-foreground: hsl(222 50% 5%);
+
+		/* Status colors - dark theme */
+		--success: hsl(150 100% 30%);
+		--success-foreground: hsl(150 100% 90%);
+		--success-muted: hsl(150 100% 6%);
+		--warning: hsl(38 92% 50%);
+		--warning-foreground: hsl(48 100% 88%);
+		--warning-muted: hsl(48 100% 6%);
+		--destructive: hsl(0 93% 73%);
+		--destructive-foreground: hsl(0 93% 94%);
+		--destructive-muted: hsl(0 93% 6%);
+		--info: hsl(212 100% 68%);
+		--info-foreground: hsl(222 50% 5%);
+		--info-muted: hsl(212 100% 6%);
+	}
+}

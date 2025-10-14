@@ -1,0 +1,22 @@
+@import 'tailwindcss';
+
+@import '$lib/styles/theme.css' layer(theme);
+
+/* Base document styling; use Tailwind classes in components */
+html {
+	color-scheme: light dark;
+}
+body {
+	background: var(--bg);
+	color: var(--card-foreground);
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+a {
+	color: var(--accent);
+	text-underline-offset: 4px;
+}
+a:hover {
+	text-decoration: underline;
+}
