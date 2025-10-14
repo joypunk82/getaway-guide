@@ -41,18 +41,25 @@
 	async function handleDeleteLocation(id: string) {
 		if (!confirm('Delete this location and all its sites?')) return;
 
-		const response = await fetch(`/api/getaway-guide/locations/${id}`, {
-			method: 'DELETE'
-		});
+		try {
+			console.log('[DEBUG] Deleting location:', id);
+			const response = await fetch(`/api/getaway-guide/locations/${id}`, {
+				method: 'DELETE'
+			});
 
-		if (!response.ok) {
-			console.error('Failed to delete location');
-			return;
-		}
+			if (!response.ok) {
+				console.error('Failed to delete location');
+				return;
+			}
 
-		locations = locations.filter((loc) => loc.id !== id);
-		if (addingSiteToLocationId === id) {
-			addingSiteToLocationId = null;
+			// Refresh locations from server to ensure consistency
+			await refreshLocations();
+			
+			if (addingSiteToLocationId === id) {
+				addingSiteToLocationId = null;
+			}
+		} catch (error) {
+			console.error('Error deleting location:', error);
 		}
 	}
 
@@ -131,10 +138,9 @@
 		}
 	}
 
-	async function handleImportSuccess() {
-		// Fetch updated locations from server
+	async function refreshLocations() {
 		try {
-			console.log('[DEBUG] Import success - fetching updated locations');
+			console.log('[DEBUG] Refreshing locations from server');
 			const response = await fetch('/api/getaway-guide/locations');
 			if (response.ok) {
 				const data = await response.json();
@@ -143,14 +149,43 @@
 				locations = data.locations;
 				console.log('[DEBUG] Updated locations:', locations.length);
 			} else {
-				console.error('Failed to fetch updated locations after import');
-				// Fallback to page reload if API call fails
-				window.location.reload();
+				console.error('Failed to fetch locations');
+				throw new Error('Failed to fetch locations');
 			}
 		} catch (error) {
-			console.error('Error fetching updated locations:', error);
+			console.error('Error fetching locations:', error);
+			throw error;
+		}
+	}
+
+	async function handleImportSuccess() {
+		// Fetch updated locations from server
+		try {
+			await refreshLocations();
+		} catch (error) {
 			// Fallback to page reload if there's an error
 			window.location.reload();
+		}
+	}
+
+	async function handleReset() {
+		if (!confirm('Delete all locations and sites? This cannot be undone.')) return;
+
+		try {
+			console.log('[DEBUG] Resetting all data');
+			const response = await fetch('/api/getaway-guide/reset', {
+				method: 'POST'
+			});
+
+			if (!response.ok) {
+				console.error('Failed to reset data');
+				return;
+			}
+
+			// Refresh locations (should be empty now)
+			await refreshLocations();
+		} catch (error) {
+			console.error('Error resetting data:', error);
 		}
 	}
 
@@ -163,10 +198,22 @@
 <div class="mx-auto max-w-4xl">
 	<!-- Header -->
 	<section class="mb-6">
-		<h1 class="text-2xl font-semibold tracking-tight">Getaway Guide</h1>
-		<p class="mt-1 text-[var(--muted-foreground)]">
-			Build your vacation location list and discover YouTube videos for each destination.
-		</p>
+		<div class="flex items-start justify-between">
+			<div>
+				<h1 class="text-2xl font-semibold tracking-tight">Getaway Guide</h1>
+				<p class="mt-1 text-[var(--muted-foreground)]">
+					Build your vacation location list and discover YouTube videos for each destination.
+				</p>
+			</div>
+			{#if hasLocations}
+				<button
+					onclick={handleReset}
+					class="rounded-md border border-[var(--destructive)] px-3 py-1.5 text-sm text-[var(--destructive)] hover:bg-[var(--destructive-muted)] transition-colors"
+				>
+					Reset All
+				</button>
+			{/if}
+		</div>
 	</section>
 
 	<!-- Add Location Form -->
