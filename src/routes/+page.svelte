@@ -4,8 +4,8 @@
 			Plan Your Dream Vacation with YouTube
 		</h1>
 		<p class="mx-auto max-w-2xl text-lg text-[var(--muted-foreground)]">
-			Build a list of locations and attractions you want to visit, then let us create a custom
-			YouTube playlist filled with the best travel videos for your destinations.
+			Build a list of locations and attractions you want to visit, then let us create a custom YouTube
+			playlist filled with the best travel videos for your destinations.
 		</p>
 	</section>
 
@@ -34,9 +34,7 @@
 						2
 					</div>
 					<div>
-						<h3 class="mb-1 font-semibold text-[var(--card-foreground)]">
-							List Attractions
-						</h3>
+						<h3 class="mb-1 font-semibold text-[var(--card-foreground)]">List Attractions</h3>
 						<p class="text-[var(--muted-foreground)]">
 							For each location, add specific attractions you want to see
 						</p>
@@ -51,9 +49,7 @@
 					</div>
 					<div>
 						<h3 class="mb-1 font-semibold text-[var(--card-foreground)]">Search YouTube</h3>
-						<p class="text-[var(--muted-foreground)]">
-							We'll search YouTube for the best travel videos
-						</p>
+						<p class="text-[var(--muted-foreground)]">We'll search YouTube for the best travel videos</p>
 					</div>
 				</div>
 

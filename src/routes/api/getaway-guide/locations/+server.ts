@@ -8,6 +8,16 @@ import {
 import { createLocationSchema } from '$lib/server/validation/getaway-guide';
 import { z } from 'zod';
 
+export const GET: RequestHandler = async ({ cookies }) => {
+	try {
+		const session = await getGetawayGuideSession(cookies);
+		return json({ success: true, locations: session.locations });
+	} catch (error) {
+		console.error('Failed to get locations:', error);
+		return json({ success: false, message: 'Failed to get locations' }, { status: 500 });
+	}
+};
+
 export const POST: RequestHandler = async ({ request, cookies }) => {
 	try {
 		const body = await request.json();

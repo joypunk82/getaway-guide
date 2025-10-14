@@ -130,8 +130,22 @@
 	}
 
 	async function handleImportSuccess() {
-		// Reload page to show imported locations
-		window.location.reload();
+		// Fetch updated locations from server
+		try {
+			const response = await fetch('/api/getaway-guide/locations');
+			if (response.ok) {
+				const data = await response.json();
+				locations = data.locations;
+			} else {
+				console.error('Failed to fetch updated locations after import');
+				// Fallback to page reload if API call fails
+				window.location.reload();
+			}
+		} catch (error) {
+			console.error('Error fetching updated locations:', error);
+			// Fallback to page reload if there's an error
+			window.location.reload();
+		}
 	}
 
 	$effect(() => {
