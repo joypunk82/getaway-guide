@@ -1,5 +1,5 @@
-import { put, del, head, list } from '@vercel/blob';
 import type { GetawayGuideSession } from '$lib/types/getaway-guide';
+import { del, head, put } from '@vercel/blob';
 
 /**
  * Blob-based session storage for Getaway Guide
@@ -26,27 +26,35 @@ export async function getSession(sessionId: string): Promise<SessionData | null>
 		}
 
 		console.log('[DEBUG] Getting session from blob storage:', sessionId);
-		
+
 		// Try to head the blob first to check if it exists
 		try {
 			const blob = await head(`sessions/${sessionId}.json`);
 			console.log('[DEBUG] Blob exists, fetching content');
-			
+
 			const response = await fetch(blob.url);
 			if (!response.ok) {
 				console.log('[DEBUG] Failed to fetch blob content:', response.status);
 				return null;
 			}
-			
+
 			const data = await response.json();
-			console.log('[DEBUG] Successfully retrieved session data - locations count:', data.sessionData.locations.length);
-			console.log('[DEBUG] Location IDs in retrieved session:', data.sessionData.locations.map((l: any) => l.id));
-			
-			// Log sites for each location
+			console.log(
+				'[DEBUG] Successfully retrieved session data - locations count:',
+				data.sessionData.locations.length
+			);
+			console.log(
+				'[DEBUG] Location IDs in retrieved session:',
+				data.sessionData.locations.map((l: any) => l.id)
+			);
+
+			// Log details for each location retrieved
 			data.sessionData.locations.forEach((location: any, index: number) => {
-				console.log(`[DEBUG] Retrieved location ${index} (${location.name}) has ${location.sites.length} sites:`, location.sites.map((s: any) => s.name));
+				console.log(
+					`[DEBUG] Retrieved location ${index}: ID=${location.id}, Name=${location.name}, Sites=${location.sites.length}`
+				);
 			});
-			
+
 			return data;
 		} catch (headError) {
 			console.log('[DEBUG] Blob does not exist or head failed:', headError);
@@ -64,9 +72,12 @@ const inMemorySessions = new Map<string, SessionData>();
 /**
  * Save session to blob storage
  */
-export async function saveSession(sessionId: string, sessionData: GetawayGuideSession): Promise<void> {
+export async function saveSession(
+	sessionId: string,
+	sessionData: GetawayGuideSession
+): Promise<void> {
 	const now = Date.now();
-	const expiresAt = now + (4 * 60 * 60 * 1000); // 4 hours
+	const expiresAt = now + 4 * 60 * 60 * 1000; // 4 hours
 
 	const data: SessionData = {
 		id: sessionId,
@@ -86,12 +97,14 @@ export async function saveSession(sessionId: string, sessionData: GetawayGuideSe
 	try {
 		console.log('[DEBUG] Saving session to blob storage:', sessionId);
 		console.log('[DEBUG] Session data being saved - locations count:', sessionData.locations.length);
-		
-		// Log sites for each location being saved
+
+		// Log details for each location being saved
 		sessionData.locations.forEach((location: any, index: number) => {
-			console.log(`[DEBUG] Saving location ${index} (${location.name}) with ${location.sites.length} sites:`, location.sites.map((s: any) => s.name));
+			console.log(
+				`[DEBUG] Saving location ${index}: ID=${location.id}, Name=${location.name}, Sites=${location.sites.length}`
+			);
 		});
-		
+
 		// First, try to delete existing blob if it exists
 		try {
 			await del(`sessions/${sessionId}.json`);
@@ -99,7 +112,7 @@ export async function saveSession(sessionId: string, sessionData: GetawayGuideSe
 		} catch {
 			// Ignore delete errors - blob might not exist
 		}
-		
+
 		const result = await put(`sessions/${sessionId}.json`, JSON.stringify(data), {
 			access: 'public',
 			addRandomSuffix: false

@@ -47,14 +47,18 @@
 				method: 'DELETE'
 			});
 
+			console.log('[DEBUG] Delete response status:', response.status);
+			const result = await response.json();
+			console.log('[DEBUG] Delete response data:', result);
+
 			if (!response.ok) {
-				console.error('Failed to delete location');
+				console.error('Failed to delete location:', result);
 				return;
 			}
 
 			// Refresh locations from server to ensure consistency
 			await refreshLocations();
-			
+
 			if (addingSiteToLocationId === id) {
 				addingSiteToLocationId = null;
 			}

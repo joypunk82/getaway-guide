@@ -1,7 +1,12 @@
-import type { RequestHandler } from './$types';
-import { json } from '@sveltejs/kit';
+import {
+	addLocation,
+	addSiteToLocation,
+	getGetawayGuideSession,
+	saveGetawayGuideSession
+} from '$lib/server/getaway-guide/session';
 import { parseVacationGuide, validateGuideFile } from '$lib/utils/getaway-guide-parser';
-import { getGetawayGuideSession, saveGetawayGuideSession, addLocation, addSiteToLocation } from '$lib/server/getaway-guide/session';
+import { json } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
 
 /**
  * POST /api/getaway-guide/import
@@ -45,7 +50,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		for (const location of locations) {
 			// Add location (returns the created location object)
 			const newLocation = addLocation(session, location.name);
-			
+
 			// Add each site to the location
 			for (const site of location.sites) {
 				addSiteToLocation(session, newLocation.id, site.name);
@@ -57,7 +62,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		session.locations.forEach((loc, index) => {
 			console.log(`[DEBUG] Location ${index}: ${loc.name} (${loc.sites.length} sites)`);
 		});
-		
+
 		await saveGetawayGuideSession(cookies, session);
 		console.log('[DEBUG] Import - session saved successfully');
 
@@ -65,13 +70,12 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 			success: true,
 			locationsAdded: locations.length,
 			sitesAdded: locations.reduce((sum, loc) => sum + loc.sites.length, 0),
-			locations: locations.map(loc => ({
+			locations: locations.map((loc) => ({
 				name: loc.name,
 				siteCount: loc.sites.length
 			})),
 			warnings: errors.length > 0 ? errors : undefined
 		});
-
 	} catch (error) {
 		console.error('Import error:', error);
 		return json(
