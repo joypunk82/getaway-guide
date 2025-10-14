@@ -41,6 +41,12 @@ export async function getSession(sessionId: string): Promise<SessionData | null>
 			const data = await response.json();
 			console.log('[DEBUG] Successfully retrieved session data - locations count:', data.sessionData.locations.length);
 			console.log('[DEBUG] Location IDs in retrieved session:', data.sessionData.locations.map((l: any) => l.id));
+			
+			// Log sites for each location
+			data.sessionData.locations.forEach((location: any, index: number) => {
+				console.log(`[DEBUG] Retrieved location ${index} (${location.name}) has ${location.sites.length} sites:`, location.sites.map((s: any) => s.name));
+			});
+			
 			return data;
 		} catch (headError) {
 			console.log('[DEBUG] Blob does not exist or head failed:', headError);
@@ -79,6 +85,12 @@ export async function saveSession(sessionId: string, sessionData: GetawayGuideSe
 
 	try {
 		console.log('[DEBUG] Saving session to blob storage:', sessionId);
+		console.log('[DEBUG] Session data being saved - locations count:', sessionData.locations.length);
+		
+		// Log sites for each location being saved
+		sessionData.locations.forEach((location: any, index: number) => {
+			console.log(`[DEBUG] Saving location ${index} (${location.name}) with ${location.sites.length} sites:`, location.sites.map((s: any) => s.name));
+		});
 		
 		// First, try to delete existing blob if it exists
 		try {

@@ -25,6 +25,13 @@ export const POST: RequestHandler = async ({ params, request, cookies }) => {
 		console.log('[DEBUG] Session locations:', session.locations.length);
 		console.log('[DEBUG] Location IDs:', session.locations.map(l => l.id));
 		
+		// Log sites before adding
+		const targetLocation = session.locations.find(l => l.id === id);
+		if (targetLocation) {
+			console.log('[DEBUG] Target location sites before adding:', targetLocation.sites.length);
+			console.log('[DEBUG] Existing site names:', targetLocation.sites.map(s => s.name));
+		}
+		
 		const success = addSiteToLocation(session, id, siteName);
 		console.log('[DEBUG] Add site success:', success);
 
@@ -33,9 +40,15 @@ export const POST: RequestHandler = async ({ params, request, cookies }) => {
 			return json({ success: false, message: 'Location not found' }, { status: 404 });
 		}
 
+		// Log sites after adding
+		if (targetLocation) {
+			console.log('[DEBUG] Target location sites after adding:', targetLocation.sites.length);
+			console.log('[DEBUG] Updated site names:', targetLocation.sites.map(s => s.name));
+		}
+
 		console.log('[DEBUG] Saving session...');
 		await saveGetawayGuideSession(cookies, session);
-		console.log('[DEBUG] Site added successfully');
+		console.log('[DEBUG] Site added and session saved successfully');
 		return json({ success: true });
 	} catch (error) {
 		console.error('[ERROR] Failed to add site:', error);
