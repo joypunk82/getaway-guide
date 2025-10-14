@@ -75,7 +75,7 @@ Create a custom YouTube playlist to watch before your trip
 		<div class="mt-8 text-center">
 			<a
 				href="/getaway-guide"
-				class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+				class="inline-flex items-center gap-2 rounded-md bg-[var(--accent)] px-6 py-3 font-semibold text-[var(--accent-foreground)] transition-colors hover:opacity-90"
 			>
 				Start Planning Your Trip
 			</a>
