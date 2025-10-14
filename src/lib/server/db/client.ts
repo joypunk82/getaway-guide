@@ -21,24 +21,32 @@ export async function getSession(sessionId: string): Promise<SessionData | null>
 	try {
 		// For development, use a simple in-memory store as fallback
 		if (!process.env.BLOB_READ_WRITE_TOKEN) {
+			console.log('[DEBUG] No BLOB_READ_WRITE_TOKEN, using in-memory storage');
 			return inMemorySessions.get(sessionId) || null;
 		}
 
-		// Use Vercel blob SDK properly
-		const blobs = await list({ prefix: `sessions/${sessionId}.json`, limit: 1 });
+		console.log('[DEBUG] Getting session from blob storage:', sessionId);
 		
-		if (blobs.blobs.length === 0) {
+		// Try to head the blob first to check if it exists
+		try {
+			const blob = await head(`sessions/${sessionId}.json`);
+			console.log('[DEBUG] Blob exists, fetching content');
+			
+			const response = await fetch(blob.url);
+			if (!response.ok) {
+				console.log('[DEBUG] Failed to fetch blob content:', response.status);
+				return null;
+			}
+			
+			const data = await response.json();
+			console.log('[DEBUG] Successfully retrieved session data');
+			return data;
+		} catch (headError) {
+			console.log('[DEBUG] Blob does not exist or head failed:', headError);
 			return null;
 		}
-
-		const response = await fetch(blobs.blobs[0].url);
-		if (!response.ok) {
-			return null;
-		}
-		
-		return await response.json();
 	} catch (error) {
-		console.error('Error getting session from blob storage:', error);
+		console.error('[ERROR] Error getting session from blob storage:', error);
 		return null;
 	}
 }
@@ -69,14 +77,25 @@ export async function saveSession(sessionId: string, sessionData: GetawayGuideSe
 	}
 
 	try {
-		console.log('Saving session to blob storage:', sessionId);
-		await put(`sessions/${sessionId}.json`, JSON.stringify(data), {
-			access: 'public'
+		console.log('[DEBUG] Saving session to blob storage:', sessionId);
+		
+		// First, try to delete existing blob if it exists
+		try {
+			await del(`sessions/${sessionId}.json`);
+			console.log('[DEBUG] Deleted existing blob');
+		} catch {
+			// Ignore delete errors - blob might not exist
+		}
+		
+		const result = await put(`sessions/${sessionId}.json`, JSON.stringify(data), {
+			access: 'public',
+			addRandomSuffix: false
 		});
-		console.log('Session saved successfully to blob storage');
+		console.log('[DEBUG] Session saved successfully to blob storage:', result.url);
 	} catch (error) {
-		console.error('Error saving session to blob storage:', error);
-		throw error;
+		console.error('[ERROR] Error saving session to blob storage:', error);
+		console.log('[DEBUG] Falling back to in-memory storage for this session');
+		inMemorySessions.set(sessionId, data);
 	}
 }
 
