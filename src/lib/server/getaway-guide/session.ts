@@ -6,7 +6,7 @@ import type {
 	PlaylistInfo
 } from '$lib/types/getaway-guide';
 import { randomUUID } from 'crypto';
-import { getSession, saveSession, deleteSession } from '$lib/server/db/client';
+import { getSession, saveSession, deleteSession } from '$lib/server/db/postgres-client';
 
 const SESSION_COOKIE_KEY = 'getaway-guide-session-id';
 const SESSION_DURATION = 1000 * 60 * 60 * 4; // 4 hours
@@ -34,7 +34,7 @@ export async function getGetawayGuideSession(cookies: Cookies): Promise<GetawayG
 		}
 
 		// Check if expired
-		if (sessionData.expiresAt < Date.now()) {
+		if (sessionData.expiresAt.getTime() < Date.now()) {
 			await deleteSession(sessionId);
 			cookies.delete(SESSION_COOKIE_KEY, { path: '/' });
 			return createEmptySession();
