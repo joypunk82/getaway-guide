@@ -1,11 +1,25 @@
 <script lang="ts">
 import '../app.css';
 import { dev } from '$app/environment';
-import { inject } from '@vercel/analytics';
-import { injectSpeedInsights } from '@vercel/speed-insights/sveltekit';
+import { browser } from '$app/environment';
 
-inject({ mode: dev ? 'development' : 'production' });
-injectSpeedInsights();
+// Only load analytics in browser and when deployed to Vercel
+if (browser && typeof window !== 'undefined') {
+	// Check if we're on Vercel (has the analytics scripts)
+	const isVercel = document.querySelector('script[src*="/_vercel/"]') || 
+	                window.location.hostname.includes('vercel.app') ||
+	                window.location.hostname.includes('getawayguide.vercel.app');
+	
+	if (isVercel) {
+		import('@vercel/analytics').then(({ inject }) => {
+			inject({ mode: dev ? 'development' : 'production' });
+		});
+		
+		import('@vercel/speed-insights/sveltekit').then(({ injectSpeedInsights }) => {
+			injectSpeedInsights();
+		});
+	}
+}
 
 let { children } = $props();
 </script>
