@@ -43,9 +43,6 @@ export function getYouTubeAuthUrl(state: string): string {
  * Exchange authorization code for access token
  */
 export async function exchangeCodeForToken(code: string): Promise<TokenResponse> {
-	console.log('[DEBUG] Starting token exchange with Google');
-	console.log('[DEBUG] Redirect URI being used:', YOUTUBE_REDIRECT_URI);
-	
 	const response = await fetch(GOOGLE_TOKEN_URL, {
 		method: 'POST',
 		headers: {
@@ -60,16 +57,13 @@ export async function exchangeCodeForToken(code: string): Promise<TokenResponse>
 		})
 	});
 
-	console.log('[DEBUG] Token exchange response status:', response.status);
-
 	if (!response.ok) {
 		const error = await response.json();
-		console.error('[ERROR] Token exchange failed:', error);
+		console.error('Token exchange failed:', error);
 		throw new Error(`Token exchange failed: ${error.error_description || error.error}`);
 	}
 
 	const tokenData = await response.json();
-	console.log('[DEBUG] Token exchange successful, got access token');
 	return tokenData;
 }
 

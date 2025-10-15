@@ -42,14 +42,11 @@
 		if (!confirm('Delete this location and all its sites?')) return;
 
 		try {
-			console.log('[DEBUG] Deleting location:', id);
 			const response = await fetch(`/api/getaway-guide/locations/${id}`, {
 				method: 'DELETE'
 			});
 
-			console.log('[DEBUG] Delete response status:', response.status);
 			const result = await response.json();
-			console.log('[DEBUG] Delete response data:', result);
 
 			if (!response.ok) {
 				console.error('Failed to delete location:', result);
@@ -144,14 +141,10 @@
 
 	async function refreshLocations() {
 		try {
-			console.log('[DEBUG] Refreshing locations from server');
 			const response = await fetch('/api/getaway-guide/locations');
 			if (response.ok) {
 				const data = await response.json();
-				console.log('[DEBUG] Received locations data:', data);
-				console.log('[DEBUG] Current locations before update:', locations.length);
 				locations = data.locations;
-				console.log('[DEBUG] Updated locations:', locations.length);
 			} else {
 				console.error('Failed to fetch locations');
 				throw new Error('Failed to fetch locations');
@@ -176,7 +169,6 @@
 		if (!confirm('Delete all locations and sites? This cannot be undone.')) return;
 
 		try {
-			console.log('[DEBUG] Resetting all data');
 			const response = await fetch('/api/getaway-guide/reset', {
 				method: 'POST'
 			});
