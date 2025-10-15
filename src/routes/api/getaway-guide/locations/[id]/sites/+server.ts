@@ -1,10 +1,10 @@
-import type { RequestHandler } from './$types';
-import { json } from '@sveltejs/kit';
 import {
+	addSiteToLocation,
 	getGetawayGuideSession,
-	saveGetawayGuideSession,
-	addSiteToLocation
+	saveGetawayGuideSession
 } from '$lib/server/getaway-guide/session';
+import { json } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ params, request, cookies }) => {
 	const { id } = params;

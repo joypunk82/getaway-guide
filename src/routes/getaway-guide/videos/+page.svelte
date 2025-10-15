@@ -1,10 +1,10 @@
 <script lang="ts">
-	import type { PageData } from './$types';
-	import type { YouTubeVideo, LocationWithVideos } from '$lib/types/getaway-guide';
-	import VideoCard from '$lib/features/getaway-guide/components/VideoCard.svelte';
-	import DurationFilter from '$lib/features/getaway-guide/components/DurationFilter.svelte';
-	import { parseDurationToSeconds } from '$lib/utils/youtube';
 	import { resolve } from '$app/paths';
+	import DurationFilter from '$lib/features/getaway-guide/components/DurationFilter.svelte';
+	import VideoCard from '$lib/features/getaway-guide/components/VideoCard.svelte';
+	import type { LocationWithVideos, YouTubeVideo } from '$lib/types/getaway-guide';
+	import { parseDurationToSeconds } from '$lib/utils/youtube';
+	import type { PageData } from './$types';
 
 	let { data } = $props<{ data: PageData }>();
 
@@ -24,17 +24,17 @@
 			return videos;
 		}
 
-		return videos.filter(video => {
+		return videos.filter((video) => {
 			const duration = parseDurationToSeconds(video.duration);
-			
+
 			if (minDurationFilter && duration < minDurationFilter) {
 				return false;
 			}
-			
+
 			if (maxDurationFilter && duration > maxDurationFilter) {
 				return false;
 			}
-			
+
 			return true;
 		});
 	}
@@ -115,20 +115,26 @@
 
 	// Filter search results by duration
 	const filteredSearchResults = $derived(
-		data.searchResults.map(location => ({
+		data.searchResults.map((location) => ({
 			...location,
 			videos: filterVideosByDuration(location.videos)
 		}))
 	);
 
 	const totalVideos = $derived(
-		data.searchResults.reduce((sum: number, location: LocationWithVideos) => sum + location.videos.length, 0)
+		data.searchResults.reduce(
+			(sum: number, location: LocationWithVideos) => sum + location.videos.length,
+			0
+		)
 	);
 
 	const filteredVideoCount = $derived(
-		filteredSearchResults.reduce((sum: number, location: LocationWithVideos) => sum + location.videos.length, 0)
+		filteredSearchResults.reduce(
+			(sum: number, location: LocationWithVideos) => sum + location.videos.length,
+			0
+		)
 	);
-	
+
 	const selectedCount = $derived(selectedVideoIds.size);
 	const hasSelectedVideos = $derived(selectedCount > 0);
 	const canCreatePlaylist = $derived(hasSelectedVideos && !isCreatingPlaylist);
@@ -165,22 +171,24 @@
 	{:else}
 		<!-- Duration Filter -->
 		<section class="mb-6">
-			<DurationFilter 
+			<DurationFilter
 				minDuration={minDurationFilter}
 				maxDuration={maxDurationFilter}
 				onFilterChange={handleDurationFilterChange}
-				totalVideos={totalVideos}
+				{totalVideos}
 				filteredVideos={filteredVideoCount}
 			/>
 		</section>
 		<!-- Videos by Location -->
-		{#each filteredSearchResults.filter(loc => loc.videos.length > 0) as location (location.id)}
+		{#each filteredSearchResults.filter((loc) => loc.videos.length > 0) as location (location.id)}
 			<section class="mb-8">
 				<div class="mb-4 flex items-center justify-between">
 					<div>
 						<h2 class="text-xl font-semibold">{location.name}</h2>
 						<p class="text-sm text-[var(--muted-foreground)]">
-							{location.videos.length} videos • {location.sites.map((s: { name: string }) => s.name).join(', ')}
+							{location.videos.length} videos • {location.sites
+								.map((s: { name: string }) => s.name)
+								.join(', ')}
 						</p>
 					</div>
 					<div class="flex gap-2">
@@ -212,9 +220,11 @@
 		{/each}
 
 		<!-- Playlist Creation Section -->
-		<section class="sticky bottom-4 rounded-lg border border-[var(--border)] bg-[var(--card)] p-6 shadow-[var(--shadow-lg)]">
+		<section
+			class="sticky bottom-4 rounded-lg border border-[var(--border)] bg-[var(--card)] p-6 shadow-[var(--shadow-lg)]"
+		>
 			<h2 class="mb-4 text-lg font-semibold">Create YouTube Playlist</h2>
-			
+
 			<div class="mb-4 grid gap-4 sm:grid-cols-2">
 				<div>
 					<label class="mb-1 block text-sm font-medium" for="playlist-title">Playlist Title</label>
@@ -228,7 +238,9 @@
 					/>
 				</div>
 				<div>
-					<label class="mb-1 block text-sm font-medium" for="playlist-description">Description (Optional)</label>
+					<label class="mb-1 block text-sm font-medium" for="playlist-description"
+						>Description (Optional)</label
+					>
 					<input
 						id="playlist-description"
 						type="text"
@@ -246,7 +258,9 @@
 			</div>
 
 			{#if playlistError}
-				<div class="mb-4 rounded-md bg-[var(--destructive-muted)] p-3 text-sm text-[var(--destructive)]">
+				<div
+					class="mb-4 rounded-md bg-[var(--destructive-muted)] p-3 text-sm text-[var(--destructive)]"
+				>
 					{playlistError}
 				</div>
 			{/if}

@@ -1,7 +1,7 @@
 /**
  * Format ISO 8601 duration (e.g., "PT4M13S") to human-readable format (e.g., "4:13")
  * Handles hours, minutes, and seconds
- * 
+ *
  * @param duration - ISO 8601 duration string from YouTube API
  */
 export function formatDuration(duration: string): string {
@@ -9,7 +9,7 @@ export function formatDuration(duration: string): string {
 
 	// Parse ISO 8601 duration format (e.g., PT1H2M30S, PT4M13S, PT45S)
 	const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
-	
+
 	if (!match) return '0:00';
 
 	const hours = parseInt(match[1] || '0', 10);
@@ -26,7 +26,7 @@ export function formatDuration(duration: string): string {
 /**
  * Format view count to human-readable format with abbreviations
  * Examples: 1234 -> "1.2K", 1234567 -> "1.2M", 1234567890 -> "1.2B"
- * 
+ *
  * @param viewCount - Number of views
  */
 export function formatViewCount(viewCount: number): string {
@@ -45,15 +45,17 @@ export function formatViewCount(viewCount: number): string {
 
 	// Round to 1 decimal place
 	const formatted = Math.round(value * 10) / 10;
-	
+
 	// Remove unnecessary .0
-	return formatted % 1 === 0 ? `${formatted.toFixed(0)}${units[unitIndex]}` : `${formatted}${units[unitIndex]}`;
+	return formatted % 1 === 0
+		? `${formatted.toFixed(0)}${units[unitIndex]}`
+		: `${formatted}${units[unitIndex]}`;
 }
 
 /**
  * Parse ISO 8601 duration to total seconds for filtering
  * Examples: "PT4M13S" -> 253, "PT1H30M" -> 5400
- * 
+ *
  * @param duration - ISO 8601 duration string from YouTube API
  */
 export function parseDurationToSeconds(duration: string): number {
@@ -61,7 +63,7 @@ export function parseDurationToSeconds(duration: string): number {
 
 	// Parse ISO 8601 duration format (e.g., PT1H2M30S, PT4M13S, PT45S)
 	const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
-	
+
 	if (!match) return 0;
 
 	const hours = parseInt(match[1] || '0', 10);
@@ -74,7 +76,7 @@ export function parseDurationToSeconds(duration: string): number {
 /**
  * Format seconds to human-readable duration for display
  * Examples: 253 -> "4:13", 5400 -> "1:30:00"
- * 
+ *
  * @param seconds - Duration in seconds
  */
 export function formatSecondsToDuration(seconds: number): string {
