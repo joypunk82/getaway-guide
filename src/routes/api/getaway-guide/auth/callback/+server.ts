@@ -37,6 +37,11 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 
 		throw redirect(303, redirectTo);
 	} catch (err) {
+		// Don't catch SvelteKit redirects - let them pass through
+		if (err && typeof err === 'object' && 'status' in err && err.status === 303) {
+			throw err;
+		}
+
 		console.error('[ERROR] Token exchange failed:', err);
 		console.error('[ERROR] Error message:', err instanceof Error ? err.message : 'Unknown error');
 		console.error('[ERROR] Full error object:', JSON.stringify(err, null, 2));
