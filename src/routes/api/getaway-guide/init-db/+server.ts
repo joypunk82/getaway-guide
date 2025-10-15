@@ -2,7 +2,7 @@ import type { RequestHandler } from '@sveltejs/kit';
 import { json } from '@sveltejs/kit';
 import { initializeDatabase } from '$lib/server/db/init';
 
-export const POST: RequestHandler = async () => {
+async function handleInitialization() {
 	try {
 		await initializeDatabase();
 		return json({ success: true, message: 'Database initialized successfully' });
@@ -14,4 +14,7 @@ export const POST: RequestHandler = async () => {
 			error: error instanceof Error ? error.message : 'Unknown error'
 		}, { status: 500 });
 	}
-};
+}
+
+export const GET: RequestHandler = handleInitialization;
+export const POST: RequestHandler = handleInitialization;
