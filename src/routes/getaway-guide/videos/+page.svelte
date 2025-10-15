@@ -17,6 +17,7 @@
 	let isCreatingPlaylist = $state(false);
 	let playlistError = $state<string | null>(null);
 	let authSuccessMessage = $state<string | null>(null);
+	let isAuthenticated = $state(false);
 
 	// Duration filtering state
 	let minDurationFilter = $state<number | null>(null);
@@ -48,6 +49,23 @@
 		maxDurationFilter = max;
 	}
 
+	// Check authentication status
+	async function checkAuthStatus() {
+		try {
+			const response = await fetch('/api/getaway-guide/auth/status');
+			if (response.ok) {
+				const data = await response.json();
+				isAuthenticated = data.authenticated;
+			}
+		} catch (error) {
+			console.error('Failed to check auth status:', error);
+		}
+	}
+
+	function handleYouTubeConnect() {
+		window.location.href = '/api/getaway-guide/auth/login?redirect=/getaway-guide/videos';
+	}
+
 	// Initialize from localStorage on component mount
 	onMount(() => {
 		// Load saved selections
@@ -59,11 +77,15 @@
 		playlistTitle = playlistInfo.title;
 		playlistDescription = playlistInfo.description;
 
+		// Check authentication status
+		checkAuthStatus();
+
 		// Check if we just returned from OAuth
 		const urlParams = new URLSearchParams($page.url.search);
 		if (urlParams.has('auth_success')) {
 			authSuccessMessage =
 				'Successfully connected to YouTube! You can now create playlists seamlessly.';
+			isAuthenticated = true; // Update auth status immediately
 			// Remove the parameter from URL without page reload
 			window.history.replaceState({}, '', $page.url.pathname);
 			// Auto-dismiss after 5 seconds
@@ -317,6 +339,34 @@
 		>
 			<h2 class="mb-4 text-lg font-semibold">Create YouTube Playlist</h2>
 
+			<!-- YouTube Authentication Status -->
+			<div class="mb-4">
+				{#if isAuthenticated}
+					<div
+						class="flex items-center gap-2 rounded-md bg-green-50 p-3 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-300"
+					>
+						<span class="text-green-600 dark:text-green-400">✓</span>
+						YouTube account connected - ready to create playlists!
+					</div>
+				{:else}
+					<div
+						class="rounded-md bg-yellow-50 p-3 text-sm text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-300"
+					>
+						<div class="flex items-center gap-2 mb-2">
+							<span class="text-yellow-600 dark:text-yellow-400">⚠</span>
+							Connect your YouTube account to create playlists
+						</div>
+						<button
+							type="button"
+							class="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--accent-foreground)] hover:shadow-[var(--shadow)]"
+							onclick={handleYouTubeConnect}
+						>
+							Connect YouTube Account
+						</button>
+					</div>
+				{/if}
+			</div>
+
 			<div class="mb-4 grid gap-4 sm:grid-cols-2">
 				<div>
 					<label class="mb-1 block text-sm font-medium" for="playlist-title">Playlist Title</label>
@@ -359,10 +409,16 @@
 
 			<button
 				onclick={handleCreatePlaylist}
-				disabled={!canCreatePlaylist}
+				disabled={!canCreatePlaylist || !isAuthenticated}
 				class="w-full rounded-md bg-[var(--accent)] px-6 py-3 font-medium text-[var(--accent-foreground)] hover:shadow-[var(--shadow)] disabled:opacity-50 sm:w-auto"
 			>
-				{isCreatingPlaylist ? 'Creating Playlist...' : 'Create Playlist on YouTube'}
+				{#if isCreatingPlaylist}
+					Creating Playlist...
+				{:else if !isAuthenticated}
+					Connect YouTube to Create Playlist
+				{:else}
+					Create Playlist on YouTube
+				{/if}
 			</button>
 		</section>
 	{/if}
