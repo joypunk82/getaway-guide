@@ -33,13 +33,13 @@ export interface SessionData {
 export async function getSession(sessionId: string): Promise<SessionData | null> {
 	try {
 		const sql = getConnection();
-		
-		const result = await sql`
+
+		const result = (await sql`
 			SELECT id, session_data, created_at, updated_at, expires_at
 			FROM sessions 
 			WHERE id = ${sessionId} 
 			AND expires_at > NOW()
-		` as any[];
+		`) as any[];
 
 		if (result.length === 0) {
 			return null;
@@ -73,7 +73,7 @@ export async function saveSession(
 
 	try {
 		const sql = getConnection();
-		
+
 		// Use UPSERT (INSERT ... ON CONFLICT) for atomic operation
 		await sql`
 			INSERT INTO sessions (id, session_data, expires_at, created_at, updated_at)
@@ -84,8 +84,6 @@ export async function saveSession(
 				expires_at = EXCLUDED.expires_at,
 				updated_at = EXCLUDED.updated_at
 		`;
-
-
 	} catch (error) {
 		console.error('[ERROR] Error saving session to PostgreSQL:', error);
 		throw new Error('Failed to save session to database');
@@ -100,8 +98,6 @@ export async function deleteSession(sessionId: string): Promise<void> {
 		const sql = getConnection();
 
 		await sql`DELETE FROM sessions WHERE id = ${sessionId}`;
-
-
 	} catch (error) {
 		console.error('[ERROR] Error deleting session from PostgreSQL:', error);
 		throw new Error('Failed to delete session from database');
@@ -114,7 +110,7 @@ export async function deleteSession(sessionId: string): Promise<void> {
 export async function cleanupExpiredSessions(): Promise<number> {
 	try {
 		const sql = getConnection();
-		const result = await sql`DELETE FROM sessions WHERE expires_at < NOW()` as any[];
+		const result = (await sql`DELETE FROM sessions WHERE expires_at < NOW()`) as any[];
 		const deletedCount = result.length || 0;
 		return deletedCount;
 	} catch (error) {
