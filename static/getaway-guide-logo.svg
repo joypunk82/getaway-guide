@@ -1,0 +1,13 @@
+<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="60" cy="60" r="58" fill="#1a2332" stroke="#0d1419" stroke-width="2"/>
+  
+  <!-- Stylized GG letters - larger size, centered -->
+  <g fill="#FFFFFF" stroke="#FFFFFF" stroke-width="1">
+    <!-- First G -->
+    <path d="M 30 40 Q 25 40 25 45 L 25 75 Q 25 80 30 80 L 50 80 Q 55 80 55 75 L 55 60 L 45 60 L 45 72 L 33 72 L 33 48 L 55 48 L 55 45 Q 55 40 50 40 Z"/>
+    
+    <!-- Second G -->
+    <path d="M 70 40 Q 65 40 65 45 L 65 75 Q 65 80 70 80 L 90 80 Q 95 80 95 75 L 95 60 L 85 60 L 85 72 L 73 72 L 73 48 L 95 48 L 95 45 Q 95 40 90 40 Z"/>
+  </g>
+</svg>
