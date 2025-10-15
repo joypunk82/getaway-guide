@@ -97,6 +97,7 @@ curl -H "Authorization: Bearer YOUR_TOKEN" \
 ### Health Check Endpoints
 
 #### System Health (No Authentication Required)
+
 ```bash
 # Check overall system health
 curl "https://getawayguide.vercel.app/api/getaway-guide/health"
@@ -117,6 +118,7 @@ curl "https://getawayguide.vercel.app/api/getaway-guide/health"
 ```
 
 #### User Authentication Check (Requires Login)
+
 ```bash
 # Check user authentication (run this after logging in)
 curl -b "cookies.txt" "https://getawayguide.vercel.app/api/getaway-guide/auth/check"
@@ -131,6 +133,7 @@ curl -b "cookies.txt" "https://getawayguide.vercel.app/api/getaway-guide/auth/ch
 ```
 
 ### Manual API Testing
+
 ```bash
 # Test API key directly
 curl "https://www.googleapis.com/youtube/v3/search?part=snippet&q=test&key=YOUR_API_KEY"
@@ -143,23 +146,26 @@ curl -H "Authorization: Bearer YOUR_TOKEN" \
 ### Health Check Interpretation
 
 #### System Status: "healthy"
+
 - ✅ All core components working
 - ✅ API key valid and functional
 - ✅ Database connection established
 - ℹ️ User authentication status doesn't affect system health
 
 #### System Status: "degraded"
+
 - ❌ Core system issue detected
 - Check: API key missing or invalid
 - Check: Database connection failed
 - Check: Environment variables not set
 
 #### User Authentication States
-| userAuthenticated | userTokenValid | Meaning |
-|------------------|----------------|---------|
-| `false` | `false` | Normal - user not logged in |
-| `true` | `true` | User authenticated and ready |
-| `true` | `false` | User token expired - needs re-auth |
+
+| userAuthenticated | userTokenValid | Meaning                            |
+| ----------------- | -------------- | ---------------------------------- |
+| `false`           | `false`        | Normal - user not logged in        |
+| `true`            | `true`         | User authenticated and ready       |
+| `true`            | `false`        | User token expired - needs re-auth |
 
 ### Check Quota Usage
 

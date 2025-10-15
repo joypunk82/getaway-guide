@@ -62,7 +62,7 @@ export const GET: RequestHandler = async ({ cookies }) => {
 			status,
 			timestamp: new Date().toISOString(),
 			checks,
-			message: systemHealthy 
+			message: systemHealthy
 				? 'All core systems operational'
 				: 'Core system components have issues - check API key and configuration'
 		},

@@ -4,23 +4,29 @@ import { json, type RequestHandler } from '@sveltejs/kit';
 export const GET: RequestHandler = async ({ cookies }) => {
 	try {
 		const accessToken = await getAccessToken(cookies);
-		
+
 		if (!accessToken) {
-			return json({
-				authenticated: false,
-				message: 'No YouTube authentication found. Please connect your YouTube account.'
-			}, { status: 401 });
+			return json(
+				{
+					authenticated: false,
+					message: 'No YouTube authentication found. Please connect your YouTube account.'
+				},
+				{ status: 401 }
+			);
 		}
 
 		// Validate the token
 		const isValid = await validateAccessToken(accessToken);
-		
+
 		if (!isValid) {
-			return json({
-				authenticated: true,
-				valid: false,
-				message: 'YouTube authentication expired. Please reconnect your account.'
-			}, { status: 401 });
+			return json(
+				{
+					authenticated: true,
+					valid: false,
+					message: 'YouTube authentication expired. Please reconnect your account.'
+				},
+				{ status: 401 }
+			);
 		}
 
 		// Test playlist creation permissions
@@ -43,16 +49,18 @@ export const GET: RequestHandler = async ({ cookies }) => {
 			authenticated: true,
 			valid: true,
 			canCreatePlaylists,
-			message: canCreatePlaylists 
+			message: canCreatePlaylists
 				? 'YouTube authentication is working correctly'
 				: 'YouTube authentication valid but playlist creation may not work'
 		});
-
 	} catch (error) {
 		console.error('Auth check error:', error);
-		return json({
-			authenticated: false,
-			message: 'Error checking authentication status'
-		}, { status: 500 });
+		return json(
+			{
+				authenticated: false,
+				message: 'Error checking authentication status'
+			},
+			{ status: 500 }
+		);
 	}
 };

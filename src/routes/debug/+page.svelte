@@ -52,7 +52,10 @@
 			userAuth = await response.json();
 		} catch (error) {
 			console.error('Auth check failed:', error);
-			testResults = [...testResults, { type: 'error', message: 'Failed to check user authentication' }];
+			testResults = [
+				...testResults,
+				{ type: 'error', message: 'Failed to check user authentication' }
+			];
 		}
 		loading = false;
 	}
@@ -60,7 +63,7 @@
 	async function testPlaylistCreation() {
 		loading = true;
 		testResults = [...testResults, { type: 'info', message: 'Testing playlist creation...' }];
-		
+
 		try {
 			const response = await fetch('/api/getaway-guide/playlist', {
 				method: 'POST',
@@ -73,25 +76,34 @@
 			});
 
 			const result = await response.json();
-			
+
 			if (response.ok) {
-				testResults = [...testResults, { 
-					type: 'success', 
-					message: `✅ Playlist created successfully: ${result.playlist?.title}`,
-					data: result
-				}];
+				testResults = [
+					...testResults,
+					{
+						type: 'success',
+						message: `✅ Playlist created successfully: ${result.playlist?.title}`,
+						data: result
+					}
+				];
 			} else {
-				testResults = [...testResults, { 
-					type: 'error', 
-					message: `❌ Playlist creation failed: ${result.message}`,
-					data: result
-				}];
+				testResults = [
+					...testResults,
+					{
+						type: 'error',
+						message: `❌ Playlist creation failed: ${result.message}`,
+						data: result
+					}
+				];
 			}
 		} catch (error) {
-			testResults = [...testResults, { 
-				type: 'error', 
-				message: `❌ Network error: ${error instanceof Error ? error.message : 'Unknown error'}`
-			}];
+			testResults = [
+				...testResults,
+				{
+					type: 'error',
+					message: `❌ Network error: ${error instanceof Error ? error.message : 'Unknown error'}`
+				}
+			];
 		}
 		loading = false;
 	}
@@ -129,17 +141,23 @@
 			<div class="space-y-2">
 				<div class="flex items-center gap-2">
 					<span class="font-medium">Status:</span>
-					<span class="rounded px-2 py-1 text-sm {systemHealth.status === 'healthy' 
-						? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
-						: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}">
+					<span
+						class="rounded px-2 py-1 text-sm {systemHealth.status === 'healthy'
+							? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+							: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}"
+					>
 						{systemHealth.status}
 					</span>
 				</div>
 				<div class="text-sm text-[var(--muted-foreground)]">{systemHealth.message}</div>
-				
+
 				<details class="mt-4">
 					<summary class="cursor-pointer text-sm font-medium">System Checks</summary>
-					<pre class="mt-2 rounded bg-[var(--muted)] p-3 text-xs overflow-auto">{JSON.stringify(systemHealth.checks, null, 2)}</pre>
+					<pre class="mt-2 rounded bg-[var(--muted)] p-3 text-xs overflow-auto">{JSON.stringify(
+							systemHealth.checks,
+							null,
+							2
+						)}</pre>
 				</details>
 			</div>
 		{:else}
@@ -155,10 +173,16 @@
 				<div class="space-y-2">
 					<div class="flex items-center gap-2">
 						<span class="font-medium">Status:</span>
-						<span class="rounded px-2 py-1 text-sm {userAuth.valid && userAuth.canCreatePlaylists
-							? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-							: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'}">
-							{userAuth.valid ? (userAuth.canCreatePlaylists ? 'Fully Authenticated' : 'Limited Access') : 'Invalid Token'}
+						<span
+							class="rounded px-2 py-1 text-sm {userAuth.valid && userAuth.canCreatePlaylists
+								? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+								: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'}"
+						>
+							{userAuth.valid
+								? userAuth.canCreatePlaylists
+									? 'Fully Authenticated'
+									: 'Limited Access'
+								: 'Invalid Token'}
 						</span>
 					</div>
 					<div class="text-sm text-[var(--muted-foreground)]">{userAuth.message}</div>
@@ -166,7 +190,7 @@
 			{:else}
 				<div class="space-y-4">
 					<div class="text-[var(--muted-foreground)]">{userAuth.message}</div>
-					<button 
+					<button
 						onclick={connectYouTube}
 						class="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--accent-foreground)] hover:opacity-90"
 					>
@@ -183,28 +207,28 @@
 	<section class="rounded-lg border border-[var(--border)] bg-[var(--card)] p-6">
 		<h2 class="mb-4 text-lg font-semibold">Test Actions</h2>
 		<div class="flex flex-wrap gap-4">
-			<button 
+			<button
 				onclick={checkSystemHealth}
 				disabled={loading}
 				class="rounded-md border border-[var(--border)] px-4 py-2 text-sm hover:shadow-[var(--shadow-sm)] disabled:opacity-50"
 			>
 				Recheck System Health
 			</button>
-			<button 
+			<button
 				onclick={checkUserAuth}
 				disabled={loading}
 				class="rounded-md border border-[var(--border)] px-4 py-2 text-sm hover:shadow-[var(--shadow-sm)] disabled:opacity-50"
 			>
 				Recheck Authentication
 			</button>
-			<button 
+			<button
 				onclick={testPlaylistCreation}
 				disabled={loading || !userAuth?.authenticated}
 				class="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--accent-foreground)] hover:opacity-90 disabled:opacity-50"
 			>
 				Test Playlist Creation
 			</button>
-			<button 
+			<button
 				onclick={clearResults}
 				disabled={loading}
 				class="rounded-md border border-[var(--destructive)] px-4 py-2 text-sm text-[var(--destructive)] hover:bg-[var(--destructive-muted)] disabled:opacity-50"
@@ -220,11 +244,13 @@
 			<h2 class="mb-4 text-lg font-semibold">Test Results</h2>
 			<div class="space-y-3">
 				{#each testResults as result}
-					<div class="rounded-md border p-3 {result.type === 'success' 
-						? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950' 
-						: result.type === 'error' 
-						? 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950'
-						: 'border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950'}">
+					<div
+						class="rounded-md border p-3 {result.type === 'success'
+							? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950'
+							: result.type === 'error'
+								? 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950'
+								: 'border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950'}"
+					>
 						<div class="text-sm">{result.message}</div>
 						{#if result.data}
 							<details class="mt-2">
