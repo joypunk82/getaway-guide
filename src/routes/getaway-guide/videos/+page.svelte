@@ -1,9 +1,12 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { page } from '$app/stores';
 	import DurationFilter from '$lib/features/getaway-guide/components/DurationFilter.svelte';
 	import VideoCard from '$lib/features/getaway-guide/components/VideoCard.svelte';
+	import { videoSelections } from '$lib/stores/video-selections';
 	import type { LocationWithVideos, YouTubeVideo } from '$lib/types/getaway-guide';
 	import { parseDurationToSeconds } from '$lib/utils/youtube';
+	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 
 	let { data } = $props<{ data: PageData }>();
@@ -13,6 +16,7 @@
 	let playlistDescription = $state('');
 	let isCreatingPlaylist = $state(false);
 	let playlistError = $state<string | null>(null);
+	let authSuccessMessage = $state<string | null>(null);
 
 	// Duration filtering state
 	let minDurationFilter = $state<number | null>(null);
@@ -44,7 +48,34 @@
 		maxDurationFilter = max;
 	}
 
+	// Initialize from localStorage on component mount
+	onMount(() => {
+		// Load saved selections
+		const savedSelections = videoSelections.getSelectedVideoIds();
+		selectedVideoIds = new Set(savedSelections);
+
+		// Load saved playlist info
+		const playlistInfo = videoSelections.getPlaylistInfo();
+		playlistTitle = playlistInfo.title;
+		playlistDescription = playlistInfo.description;
+
+		// Check if we just returned from OAuth
+		const urlParams = new URLSearchParams($page.url.search);
+		if (urlParams.has('auth_success')) {
+			authSuccessMessage =
+				'Successfully connected to YouTube! You can now create playlists seamlessly.';
+			// Remove the parameter from URL without page reload
+			window.history.replaceState({}, '', $page.url.pathname);
+			// Auto-dismiss after 5 seconds
+			setTimeout(() => {
+				authSuccessMessage = null;
+			}, 5000);
+		}
+	});
+
 	function toggleVideoSelection(videoId: string, selected: boolean) {
+		videoSelections.toggleVideo(videoId, selected);
+
 		if (selected) {
 			selectedVideoIds.add(videoId);
 		} else {
@@ -56,6 +87,9 @@
 
 	function selectAllForLocation(location: LocationWithVideos) {
 		const filteredVideos = filterVideosByDuration(location.videos);
+		const videoIds = filteredVideos.map((v) => v.id);
+
+		videoSelections.selectAllVideos(videoIds);
 		filteredVideos.forEach((video) => selectedVideoIds.add(video.id));
 		// Trigger reactivity by creating new Set
 		selectedVideoIds = new Set(selectedVideoIds);
@@ -63,10 +97,18 @@
 
 	function deselectAllForLocation(location: LocationWithVideos) {
 		const filteredVideos = filterVideosByDuration(location.videos);
+		const videoIds = filteredVideos.map((v) => v.id);
+
+		videoSelections.deselectAllVideos(videoIds);
 		filteredVideos.forEach((video) => selectedVideoIds.delete(video.id));
 		// Trigger reactivity by creating new Set
 		selectedVideoIds = new Set(selectedVideoIds);
 	}
+
+	// Save playlist info when it changes
+	$effect(() => {
+		videoSelections.setPlaylistInfo(playlistTitle, playlistDescription);
+	});
 
 	async function handleCreatePlaylist() {
 		if (selectedVideoIds.size === 0) {
@@ -104,6 +146,13 @@
 			}
 
 			const result = await response.json();
+
+			// Clear selections after successful playlist creation
+			videoSelections.clear();
+			selectedVideoIds = new Set();
+			playlistTitle = 'My Vacation Playlist';
+			playlistDescription = '';
+
 			window.location.href = result.playlistUrl;
 		} catch (error) {
 			console.error('Playlist creation error:', error);
@@ -115,7 +164,7 @@
 
 	// Filter search results by duration
 	const filteredSearchResults = $derived(
-		data.searchResults.map((location) => ({
+		data.searchResults.map((location: LocationWithVideos) => ({
 			...location,
 			videos: filterVideosByDuration(location.videos)
 		}))
@@ -162,6 +211,49 @@
 		</div>
 	</section>
 
+	<!-- Auth Success Message -->
+	{#if authSuccessMessage}
+		<section class="mb-6">
+			<div class="rounded-lg border border-[var(--success)] bg-[var(--success-muted)] p-4">
+				<div class="flex items-start justify-between">
+					<div class="flex items-start gap-2">
+						<svg
+							class="h-5 w-5 flex-shrink-0 text-[var(--success)]"
+							xmlns="http://www.w3.org/2000/svg"
+							viewBox="0 0 20 20"
+							fill="currentColor"
+						>
+							<path
+								fill-rule="evenodd"
+								d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+								clip-rule="evenodd"
+							/>
+						</svg>
+						<p class="text-sm font-medium text-[var(--success)]">{authSuccessMessage}</p>
+					</div>
+					<button
+						onclick={() => (authSuccessMessage = null)}
+						class="text-[var(--success)] hover:opacity-70"
+						aria-label="Dismiss message"
+					>
+						<svg
+							class="h-5 w-5"
+							xmlns="http://www.w3.org/2000/svg"
+							viewBox="0 0 20 20"
+							fill="currentColor"
+						>
+							<path
+								fill-rule="evenodd"
+								d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+								clip-rule="evenodd"
+							/>
+						</svg>
+					</button>
+				</div>
+			</div>
+		</section>
+	{/if}
+
 	{#if data.searchResults.length === 0}
 		<div
 			class="rounded-lg border border-dashed border-[var(--border)] bg-[var(--muted)] p-8 text-center"
@@ -180,7 +272,7 @@
 			/>
 		</section>
 		<!-- Videos by Location -->
-		{#each filteredSearchResults.filter((loc) => loc.videos.length > 0) as location (location.id)}
+		{#each filteredSearchResults.filter((loc: LocationWithVideos) => loc.videos.length > 0) as location (location.id)}
 			<section class="mb-8">
 				<div class="mb-4 flex items-center justify-between">
 					<div>

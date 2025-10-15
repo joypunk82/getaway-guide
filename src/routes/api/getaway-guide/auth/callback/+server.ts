@@ -31,11 +31,15 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 		// Clear OAuth cookies
 		cookies.delete('oauth_state', { path: '/' });
 
-		// Redirect to saved URL or default
+		// Redirect to saved URL or default, with success indicator
 		const redirectTo = cookies.get('oauth_redirect') || '/getaway-guide/videos';
 		cookies.delete('oauth_redirect', { path: '/' });
 
-		throw redirect(303, redirectTo);
+		// Add success parameter to indicate authentication completed
+		const redirectUrl = new URL(redirectTo, url.origin);
+		redirectUrl.searchParams.set('auth_success', 'true');
+
+		throw redirect(303, redirectUrl.toString());
 	} catch (err) {
 		// Don't catch SvelteKit redirects - let them pass through
 		if (err && typeof err === 'object' && 'status' in err && err.status === 303) {

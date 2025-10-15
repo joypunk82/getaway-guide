@@ -4,6 +4,7 @@
 	import LocationCard from '$lib/features/getaway-guide/components/LocationCard.svelte';
 	import LocationForm from '$lib/features/getaway-guide/components/LocationForm.svelte';
 	import SiteForm from '$lib/features/getaway-guide/components/SiteForm.svelte';
+	import YouTubeAuth from '$lib/features/getaway-guide/components/YouTubeAuth.svelte';
 	import type { Location } from '$lib/types/getaway-guide';
 	import type { PageData } from './$types';
 
@@ -13,6 +14,7 @@
 	let isSearching = $state(false);
 	let searchError = $state<string | null>(null);
 	let locations = $state<Location[]>(data.locations);
+	let isAuthenticated = $state(false);
 
 	// Derived state for computed values
 	const hasLocations = $derived(locations.length > 0);
@@ -185,9 +187,28 @@
 		}
 	}
 
+	// Check authentication status on mount
+	async function checkAuthStatus() {
+		try {
+			const response = await fetch('/api/getaway-guide/auth/status');
+			if (response.ok) {
+				const data = await response.json();
+				isAuthenticated = data.authenticated;
+			}
+		} catch (error) {
+			console.error('Failed to check auth status:', error);
+		}
+	}
+
+	function handleYouTubeConnect() {
+		window.location.href = '/api/getaway-guide/auth/login?redirect=/getaway-guide';
+	}
+
 	$effect(() => {
 		// Clear error when locations change
 		searchError = null;
+		// Check auth status when page loads
+		checkAuthStatus();
 	});
 </script>
 
@@ -221,6 +242,11 @@
 	<!-- Import Guide -->
 	<section class="mb-6">
 		<GuideImporter onImportSuccess={handleImportSuccess} />
+	</section>
+
+	<!-- YouTube Authentication -->
+	<section class="mb-6">
+		<YouTubeAuth {isAuthenticated} onConnect={handleYouTubeConnect} />
 	</section>
 
 	<!-- Locations List -->
