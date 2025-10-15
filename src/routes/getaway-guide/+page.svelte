@@ -185,8 +185,6 @@
 		}
 	}
 
-
-
 	$effect(() => {
 		// Clear error when locations change
 		searchError = null;
