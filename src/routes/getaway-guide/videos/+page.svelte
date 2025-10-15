@@ -2,6 +2,8 @@
 	import type { PageData } from './$types';
 	import type { YouTubeVideo, LocationWithVideos } from '$lib/types/getaway-guide';
 	import VideoCard from '$lib/features/getaway-guide/components/VideoCard.svelte';
+	import DurationFilter from '$lib/features/getaway-guide/components/DurationFilter.svelte';
+	import { parseDurationToSeconds } from '$lib/utils/youtube';
 	import { resolve } from '$app/paths';
 
 	let { data } = $props<{ data: PageData }>();
@@ -11,6 +13,36 @@
 	let playlistDescription = $state('');
 	let isCreatingPlaylist = $state(false);
 	let playlistError = $state<string | null>(null);
+
+	// Duration filtering state
+	let minDurationFilter = $state<number | null>(null);
+	let maxDurationFilter = $state<number | null>(null);
+
+	// Filter videos by duration
+	function filterVideosByDuration(videos: YouTubeVideo[]): YouTubeVideo[] {
+		if (!minDurationFilter && !maxDurationFilter) {
+			return videos;
+		}
+
+		return videos.filter(video => {
+			const duration = parseDurationToSeconds(video.duration);
+			
+			if (minDurationFilter && duration < minDurationFilter) {
+				return false;
+			}
+			
+			if (maxDurationFilter && duration > maxDurationFilter) {
+				return false;
+			}
+			
+			return true;
+		});
+	}
+
+	function handleDurationFilterChange(min: number | null, max: number | null) {
+		minDurationFilter = min;
+		maxDurationFilter = max;
+	}
 
 	function toggleVideoSelection(videoId: string, selected: boolean) {
 		if (selected) {
@@ -23,13 +55,15 @@
 	}
 
 	function selectAllForLocation(location: LocationWithVideos) {
-		location.videos.forEach((video) => selectedVideoIds.add(video.id));
+		const filteredVideos = filterVideosByDuration(location.videos);
+		filteredVideos.forEach((video) => selectedVideoIds.add(video.id));
 		// Trigger reactivity by creating new Set
 		selectedVideoIds = new Set(selectedVideoIds);
 	}
 
 	function deselectAllForLocation(location: LocationWithVideos) {
-		location.videos.forEach((video) => selectedVideoIds.delete(video.id));
+		const filteredVideos = filterVideosByDuration(location.videos);
+		filteredVideos.forEach((video) => selectedVideoIds.delete(video.id));
 		// Trigger reactivity by creating new Set
 		selectedVideoIds = new Set(selectedVideoIds);
 	}
@@ -79,8 +113,20 @@
 		}
 	}
 
+	// Filter search results by duration
+	const filteredSearchResults = $derived(
+		data.searchResults.map(location => ({
+			...location,
+			videos: filterVideosByDuration(location.videos)
+		}))
+	);
+
 	const totalVideos = $derived(
 		data.searchResults.reduce((sum: number, location: LocationWithVideos) => sum + location.videos.length, 0)
+	);
+
+	const filteredVideoCount = $derived(
+		filteredSearchResults.reduce((sum: number, location: LocationWithVideos) => sum + location.videos.length, 0)
 	);
 	
 	const selectedCount = $derived(selectedVideoIds.size);
@@ -96,6 +142,9 @@
 				<h1 class="text-2xl font-semibold tracking-tight">Video Results</h1>
 				<p class="mt-1 text-[var(--muted-foreground)]">
 					Found {totalVideos} videos across {data.searchResults.length} locations
+					{#if filteredVideoCount !== totalVideos}
+						• Showing {filteredVideoCount} after filtering
+					{/if}
 				</p>
 			</div>
 			<a
@@ -114,8 +163,18 @@
 			<p class="text-[var(--muted-foreground)]">No video results found. Try adding more locations.</p>
 		</div>
 	{:else}
+		<!-- Duration Filter -->
+		<section class="mb-6">
+			<DurationFilter 
+				minDuration={minDurationFilter}
+				maxDuration={maxDurationFilter}
+				onFilterChange={handleDurationFilterChange}
+				totalVideos={totalVideos}
+				filteredVideos={filteredVideoCount}
+			/>
+		</section>
 		<!-- Videos by Location -->
-		{#each data.searchResults as location (location.id)}
+		{#each filteredSearchResults.filter(loc => loc.videos.length > 0) as location (location.id)}
 			<section class="mb-8">
 				<div class="mb-4 flex items-center justify-between">
 					<div>
