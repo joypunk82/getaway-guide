@@ -1,18 +1,11 @@
-import type { RequestHandler } from './$types';
-import { redirect, error } from '@sveltejs/kit';
 import { exchangeCodeForToken, saveTokens } from '$lib/server/getaway-guide/oauth';
+import { error, redirect } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ url, cookies }) => {
-	console.log('[DEBUG] OAuth callback reached');
-	console.log('[DEBUG] Full URL:', url.toString());
-	
 	const code = url.searchParams.get('code');
 	const state = url.searchParams.get('state');
 	const errorParam = url.searchParams.get('error');
-
-	console.log('[DEBUG] Code:', code ? 'present' : 'missing');
-	console.log('[DEBUG] State:', state);
-	console.log('[DEBUG] Error param:', errorParam);
 
 	// Check for OAuth errors
 	if (errorParam) {
@@ -32,16 +25,12 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 	}
 
 	try {
-		console.log('[DEBUG] Attempting token exchange...');
 		const tokenData = await exchangeCodeForToken(code);
-		console.log('[DEBUG] Token exchange successful');
-		
 		saveTokens(cookies, tokenData);
-		console.log('[DEBUG] Tokens saved');
 
 		// Clear OAuth cookies
 		cookies.delete('oauth_state', { path: '/' });
-		
+
 		// Redirect to saved URL or default
 		const redirectTo = cookies.get('oauth_redirect') || '/getaway-guide/videos';
 		cookies.delete('oauth_redirect', { path: '/' });

@@ -1,38 +1,27 @@
-import type { RequestHandler } from './$types';
-import { json } from '@sveltejs/kit';
 import {
+	addSiteToLocation,
 	getGetawayGuideSession,
-	saveGetawayGuideSession,
 	removeLocation,
-	addSiteToLocation
+	saveGetawayGuideSession
 } from '$lib/server/getaway-guide/session';
+import { json } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
 
 export const DELETE: RequestHandler = async ({ params, cookies }) => {
 	const { id } = params;
 
 	try {
-		console.log('[DEBUG] Deleting location:', id);
 		const session = await getGetawayGuideSession(cookies);
-		console.log('[DEBUG] Session before delete - locations:', session.locations.length);
-		console.log('[DEBUG] Location IDs before delete:', session.locations.map(l => l.id));
-		
 		const success = removeLocation(session, id);
-		console.log('[DEBUG] Remove location success:', success);
-		
+
 		if (!success) {
-			console.log('[DEBUG] Location not found for deletion');
 			return json({ success: false, message: 'Location not found' }, { status: 404 });
 		}
 
-		console.log('[DEBUG] Session after delete - locations:', session.locations.length);
-		console.log('[DEBUG] Location IDs after delete:', session.locations.map(l => l.id));
-		
-		console.log('[DEBUG] Saving session after location deletion...');
 		await saveGetawayGuideSession(cookies, session);
-		console.log('[DEBUG] Location deleted and session saved successfully');
 		return json({ success: true });
 	} catch (error) {
-		console.error('[ERROR] Failed to delete location:', error);
+		console.error('Failed to delete location:', error);
 		return json({ success: false, message: 'Failed to delete location' }, { status: 500 });
 	}
 };

@@ -1,12 +1,12 @@
-import type { Cookies } from '@sveltejs/kit';
+import { deleteSession, getSession, saveSession } from '$lib/server/db/postgres-client';
 import type {
-	Location,
 	GetawayGuideSession,
+	Location,
 	LocationWithVideos,
 	PlaylistInfo
 } from '$lib/types/getaway-guide';
+import type { Cookies } from '@sveltejs/kit';
 import { randomUUID } from 'crypto';
-import { getSession, saveSession, deleteSession } from '$lib/server/db/postgres-client';
 
 const SESSION_COOKIE_KEY = 'getaway-guide-session-id';
 const SESSION_DURATION = 1000 * 60 * 60 * 4; // 4 hours
@@ -21,7 +21,7 @@ function createEmptySession(): GetawayGuideSession {
 
 export async function getGetawayGuideSession(cookies: Cookies): Promise<GetawayGuideSession> {
 	const sessionId = cookies.get(SESSION_COOKIE_KEY);
-	
+
 	if (!sessionId) {
 		return createEmptySession();
 	}
@@ -74,11 +74,11 @@ export async function saveGetawayGuideSession(
 
 export async function clearGetawayGuideSession(cookies: Cookies): Promise<void> {
 	const sessionId = cookies.get(SESSION_COOKIE_KEY);
-	
+
 	if (sessionId) {
 		await deleteSession(sessionId);
 	}
-	
+
 	cookies.delete(SESSION_COOKIE_KEY, { path: '/' });
 }
 

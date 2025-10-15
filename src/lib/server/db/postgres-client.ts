@@ -1,5 +1,5 @@
-import { neon } from '@neondatabase/serverless';
 import type { GetawayGuideSession } from '$lib/types/getaway-guide';
+import { neon } from '@neondatabase/serverless';
 
 const sql = neon(process.env.DATABASE_URL!);
 
@@ -22,7 +22,7 @@ export interface SessionData {
 export async function getSession(sessionId: string): Promise<SessionData | null> {
 	try {
 		console.log('[DEBUG] Getting session from PostgreSQL:', sessionId);
-		
+
 		const result = await sql`
 			SELECT id, session_data, created_at, updated_at, expires_at
 			FROM sessions 
@@ -44,11 +44,16 @@ export async function getSession(sessionId: string): Promise<SessionData | null>
 			expiresAt: new Date(row.expires_at as string)
 		};
 
-		console.log('[DEBUG] Successfully retrieved session - locations count:', sessionData.sessionData.locations.length);
-		
+		console.log(
+			'[DEBUG] Successfully retrieved session - locations count:',
+			sessionData.sessionData.locations.length
+		);
+
 		// Log details for each location retrieved
 		sessionData.sessionData.locations.forEach((location: any, index: number) => {
-			console.log(`[DEBUG] Retrieved location ${index}: ID=${location.id}, Name=${location.name}, Sites=${location.sites.length}`);
+			console.log(
+				`[DEBUG] Retrieved location ${index}: ID=${location.id}, Name=${location.name}, Sites=${location.sites.length}`
+			);
 		});
 
 		return sessionData;
@@ -61,17 +66,22 @@ export async function getSession(sessionId: string): Promise<SessionData | null>
 /**
  * Save session to PostgreSQL database
  */
-export async function saveSession(sessionId: string, sessionData: GetawayGuideSession): Promise<void> {
+export async function saveSession(
+	sessionId: string,
+	sessionData: GetawayGuideSession
+): Promise<void> {
 	const now = new Date();
-	const expiresAt = new Date(now.getTime() + (4 * 60 * 60 * 1000)); // 4 hours
+	const expiresAt = new Date(now.getTime() + 4 * 60 * 60 * 1000); // 4 hours
 
 	try {
 		console.log('[DEBUG] Saving session to PostgreSQL:', sessionId);
 		console.log('[DEBUG] Session data being saved - locations count:', sessionData.locations.length);
-		
+
 		// Log details for each location being saved
 		sessionData.locations.forEach((location: any, index: number) => {
-			console.log(`[DEBUG] Saving location ${index}: ID=${location.id}, Name=${location.name}, Sites=${location.sites.length}`);
+			console.log(
+				`[DEBUG] Saving location ${index}: ID=${location.id}, Name=${location.name}, Sites=${location.sites.length}`
+			);
 		});
 
 		// Use UPSERT (INSERT ... ON CONFLICT) for atomic operation
@@ -98,9 +108,9 @@ export async function saveSession(sessionId: string, sessionData: GetawayGuideSe
 export async function deleteSession(sessionId: string): Promise<void> {
 	try {
 		console.log('[DEBUG] Deleting session from PostgreSQL:', sessionId);
-		
+
 		await sql`DELETE FROM sessions WHERE id = ${sessionId}`;
-		
+
 		console.log('[DEBUG] Session deleted successfully from PostgreSQL');
 	} catch (error) {
 		console.error('[ERROR] Error deleting session from PostgreSQL:', error);

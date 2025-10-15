@@ -1,12 +1,15 @@
-import type { RequestHandler } from './$types';
-import { json } from '@sveltejs/kit';
 import {
 	getGetawayGuideSession,
 	saveGetawayGuideSession,
 	setSearchResults
 } from '$lib/server/getaway-guide/session';
-import { searchVideosForLocation, estimateSearchQuotaCost } from '$lib/server/getaway-guide/youtube';
+import {
+	estimateSearchQuotaCost,
+	searchVideosForLocation
+} from '$lib/server/getaway-guide/youtube';
 import type { LocationWithVideos } from '$lib/types/getaway-guide';
+import { json } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ cookies }) => {
 	try {
@@ -19,7 +22,6 @@ export const POST: RequestHandler = async ({ cookies }) => {
 		// Calculate quota cost
 		const totalSites = session.locations.reduce((sum, loc) => sum + loc.sites.length, 0);
 		const estimatedCost = estimateSearchQuotaCost(1, totalSites);
-		console.log(`Estimated quota cost: ${estimatedCost} units`);
 
 		const searchResults: LocationWithVideos[] = [];
 

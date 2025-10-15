@@ -11,10 +11,7 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
-# Database
-data/app.db
-*.db
-*.sqlite
+# Database (using PostgreSQL now)
 
 # Build outputs
 .svelte-kit

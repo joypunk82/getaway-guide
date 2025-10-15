@@ -1,14 +1,18 @@
-import type { RequestHandler } from './$types';
-import { json, redirect } from '@sveltejs/kit';
+import { getAccessToken } from '$lib/server/getaway-guide/oauth';
 import {
 	getGetawayGuideSession,
 	saveGetawayGuideSession,
 	setPlaylist
 } from '$lib/server/getaway-guide/session';
-import { createPlaylist, addVideosToPlaylist, estimatePlaylistQuotaCost } from '$lib/server/getaway-guide/youtube';
-import { getAccessToken } from '$lib/server/getaway-guide/oauth';
+import {
+	addVideosToPlaylist,
+	createPlaylist,
+	estimatePlaylistQuotaCost
+} from '$lib/server/getaway-guide/youtube';
 import { createPlaylistSchema } from '$lib/server/validation/getaway-guide';
+import { json } from '@sveltejs/kit';
 import { z } from 'zod';
+import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ request, cookies }) => {
 	try {
@@ -26,23 +30,12 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 
 		// Calculate quota cost
 		const estimatedCost = estimatePlaylistQuotaCost(validated.videoIds.length);
-		console.log(`Estimated playlist creation cost: ${estimatedCost} units`);
 
 		// Create the playlist
-		const playlist = await createPlaylist(
-			validated.title,
-			validated.description,
-			accessToken
-		);
+		const playlist = await createPlaylist(validated.title, validated.description, accessToken);
 
 		// Add videos to the playlist
-		const { added, failed } = await addVideosToPlaylist(
-			playlist.id,
-			validated.videoIds,
-			accessToken
-		);
-
-		console.log(`Added ${added} videos, ${failed} failed`);
+		const { added, failed } = await addVideosToPlaylist(playlist.id, validated.videoIds, accessToken);
 
 		// Save playlist info to session
 		const session = await getGetawayGuideSession(cookies);
