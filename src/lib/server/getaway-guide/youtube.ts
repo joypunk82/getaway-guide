@@ -1,5 +1,5 @@
-import type { YouTubeVideo } from '$lib/types/getaway-guide';
 import { YOUTUBE_API_KEY } from '$env/static/private';
+import type { YouTubeVideo } from '$lib/types/getaway-guide';
 
 // YouTube Data API v3 quota costs:
 // - search.list: 100 units per call
@@ -56,10 +56,12 @@ interface YouTubePlaylistResponse {
 /**
  * Get video details (duration, view count) for a list of video IDs
  * Cost: 1 unit per call (can fetch up to 50 videos per call)
- * 
+ *
  * @param videoIds - Array of YouTube video IDs
  */
-async function getVideoDetails(videoIds: string[]): Promise<Map<string, { duration: string; viewCount: number }>> {
+async function getVideoDetails(
+	videoIds: string[]
+): Promise<Map<string, { duration: string; viewCount: number }>> {
 	if (!YOUTUBE_API_KEY || videoIds.length === 0) {
 		return new Map();
 	}
@@ -80,7 +82,7 @@ async function getVideoDetails(videoIds: string[]): Promise<Map<string, { durati
 			url.searchParams.set('key', YOUTUBE_API_KEY);
 
 			const response = await fetch(url.toString());
-			
+
 			if (!response.ok) {
 				const error = await response.json();
 				console.error('YouTube API error (video details):', error);
@@ -107,7 +109,7 @@ async function getVideoDetails(videoIds: string[]): Promise<Map<string, { durati
 /**
  * Search YouTube for videos related to a location and its sites
  * Cost: 100 units per call
- * 
+ *
  * @param locationName - The location name (e.g., "Paris")
  * @param sites - Array of site names (e.g., ["Eiffel Tower", "Louvre"])
  * @param maxResultsPerSite - Max videos to return per site (default: 2)
@@ -133,7 +135,7 @@ export async function searchVideosForLocation(
 	// This uses more quota but provides better results
 	for (const site of sites) {
 		const query = `${locationName} ${site}`;
-		
+
 		try {
 			const url = new URL(`${YOUTUBE_API_BASE}/search`);
 			url.searchParams.set('part', 'snippet');
@@ -148,7 +150,7 @@ export async function searchVideosForLocation(
 			url.searchParams.set('regionCode', 'US');
 
 			const response = await fetch(url.toString());
-			
+
 			if (!response.ok) {
 				const error = await response.json();
 				console.error('YouTube API error:', error);
@@ -160,7 +162,7 @@ export async function searchVideosForLocation(
 			for (const item of data.items) {
 				// Avoid duplicate videos
 				if (seenVideoIds.has(item.id.videoId)) continue;
-				
+
 				seenVideoIds.add(item.id.videoId);
 				tempVideos.push({
 					id: item.id.videoId,
@@ -179,11 +181,11 @@ export async function searchVideosForLocation(
 
 	// Fetch video details (duration, view count) for all videos
 	// Cost: 1 unit per 50 videos
-	const videoIds = tempVideos.map(v => v.id);
+	const videoIds = tempVideos.map((v) => v.id);
 	const videoDetails = await getVideoDetails(videoIds);
 
 	// Merge details into videos
-	const allVideos: YouTubeVideo[] = tempVideos.map(video => ({
+	const allVideos: YouTubeVideo[] = tempVideos.map((video) => ({
 		...video,
 		duration: videoDetails.get(video.id)?.duration || 'PT0S',
 		viewCount: videoDetails.get(video.id)?.viewCount || 0
@@ -195,7 +197,7 @@ export async function searchVideosForLocation(
 /**
  * Create a new YouTube playlist
  * Cost: 50 units
- * 
+ *
  * @param title - Playlist title
  * @param description - Playlist description
  * @param accessToken - YouTube OAuth access token
@@ -205,42 +207,99 @@ export async function createPlaylist(
 	description: string | undefined,
 	accessToken: string
 ): Promise<{ id: string; title: string }> {
-	const url = `${YOUTUBE_API_BASE}/playlists?part=snippet,status`;
-
-	const response = await fetch(url, {
-		method: 'POST',
-		headers: {
-			'Authorization': `Bearer ${accessToken}`,
-			'Content-Type': 'application/json'
-		},
-		body: JSON.stringify({
-			snippet: {
-				title,
-				description: description || `Created with Getaway Guide`
-			},
-			status: {
-				privacyStatus: 'public' // Can be 'public', 'private', or 'unlisted'
-			}
-		})
-	});
-
-	if (!response.ok) {
-		const error = await response.json();
-		console.error('YouTube playlist creation error:', error);
-		throw new Error(`Failed to create playlist: ${error.error?.message || 'Unknown error'}`);
+	// Validate inputs
+	if (!title || title.trim().length === 0) {
+		throw new Error('Playlist title is required');
 	}
 
-	const data: YouTubePlaylistResponse = await response.json();
-	return {
-		id: data.id,
-		title: data.snippet.title
+	if (!accessToken || accessToken.trim().length === 0) {
+		throw new Error('Access token is required');
+	}
+
+	// Sanitize title and description to prevent API issues
+	const sanitizedTitle = title.trim().substring(0, 150); // YouTube max title length
+	const sanitizedDescription = description
+		? description.trim().substring(0, 5000) // YouTube max description length
+		: 'Created with Getaway Guide';
+
+	const url = `${YOUTUBE_API_BASE}/playlists?part=snippet,status`;
+
+	const requestBody = {
+		snippet: {
+			title: sanitizedTitle,
+			description: sanitizedDescription,
+			defaultLanguage: 'en'
+		},
+		status: {
+			privacyStatus: 'public' // Can be 'public', 'private', or 'unlisted'
+		}
 	};
+
+	console.log('[DEBUG] Creating playlist with data:', {
+		title: sanitizedTitle,
+		description: sanitizedDescription,
+		url
+	});
+
+	try {
+		const response = await fetch(url, {
+			method: 'POST',
+			headers: {
+				Authorization: `Bearer ${accessToken}`,
+				'Content-Type': 'application/json',
+				Accept: 'application/json'
+			},
+			body: JSON.stringify(requestBody)
+		});
+
+		console.log('[DEBUG] YouTube API response status:', response.status);
+
+		if (!response.ok) {
+			const error = await response.json().catch(() => ({ error: { message: 'Unknown error' } }));
+			console.error('[ERROR] YouTube playlist creation error:', {
+				status: response.status,
+				statusText: response.statusText,
+				error,
+				requestBody
+			});
+
+			// Provide more specific error messages
+			if (response.status === 401) {
+				throw new Error('YouTube authentication failed. Please reconnect your YouTube account.');
+			} else if (response.status === 403) {
+				throw new Error('YouTube API quota exceeded or permissions insufficient.');
+			} else if (response.status === 400) {
+				throw new Error('Invalid playlist data. Please check your title and description.');
+			} else {
+				throw new Error(
+					`Failed to create playlist: ${error.error?.message || `HTTP ${response.status}`}`
+				);
+			}
+		}
+
+		const data: YouTubePlaylistResponse = await response.json();
+		console.log('[DEBUG] Playlist created successfully:', {
+			id: data.id,
+			title: data.snippet.title
+		});
+
+		return {
+			id: data.id,
+			title: data.snippet.title
+		};
+	} catch (fetchError) {
+		console.error('[ERROR] Network error creating playlist:', fetchError);
+		if (fetchError instanceof Error && fetchError.message.includes('Failed to create playlist')) {
+			throw fetchError; // Re-throw our formatted errors
+		}
+		throw new Error('Network error: Unable to connect to YouTube API');
+	}
 }
 
 /**
  * Add a video to a playlist
  * Cost: 50 units per call
- * 
+ *
  * @param playlistId - The playlist ID
  * @param videoId - The video ID to add
  * @param accessToken - YouTube OAuth access token
@@ -255,7 +314,7 @@ export async function addVideoToPlaylist(
 	const response = await fetch(url, {
 		method: 'POST',
 		headers: {
-			'Authorization': `Bearer ${accessToken}`,
+			Authorization: `Bearer ${accessToken}`,
 			'Content-Type': 'application/json'
 		},
 		body: JSON.stringify({
@@ -279,11 +338,11 @@ export async function addVideoToPlaylist(
 /**
  * Add multiple videos to a playlist (batch operation)
  * Cost: 50 units per video
- * 
+ *
  * Note: YouTube API doesn't have true batch insert for playlist items,
  * so we need to make individual calls. To minimize quota impact, we
  * could add error handling to stop if quota is exceeded.
- * 
+ *
  * @param playlistId - The playlist ID
  * @param videoIds - Array of video IDs to add
  * @param accessToken - YouTube OAuth access token
@@ -322,5 +381,5 @@ export function estimateSearchQuotaCost(locationCount: number, sitesPerLocation:
  */
 export function estimatePlaylistQuotaCost(videoCount: number): number {
 	// Create playlist (50) + add each video (50 each)
-	return 50 + (videoCount * 50);
+	return 50 + videoCount * 50;
 }

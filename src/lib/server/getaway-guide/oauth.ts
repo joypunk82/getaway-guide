@@ -172,3 +172,25 @@ export function clearTokens(cookies: Cookies): void {
 export function isAuthenticated(cookies: Cookies): boolean {
 	return cookies.get(TOKEN_COOKIE_KEY) !== undefined;
 }
+
+/**
+ * Validate access token by making a test API call to YouTube
+ */
+export async function validateAccessToken(accessToken: string): Promise<boolean> {
+	try {
+		const response = await fetch(
+			'https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true',
+			{
+				headers: {
+					Authorization: `Bearer ${accessToken}`,
+					Accept: 'application/json'
+				}
+			}
+		);
+
+		return response.ok;
+	} catch (error) {
+		console.error('Token validation failed:', error);
+		return false;
+	}
+}
