@@ -94,16 +94,72 @@ curl -H "Authorization: Bearer YOUR_TOKEN" \
 
 ## Debug Commands
 
-### Test API Connection
+### Health Check Endpoints
 
+#### System Health (No Authentication Required)
 ```bash
-# Test API key
+# Check overall system health
+curl "https://getawayguide.vercel.app/api/getaway-guide/health"
+
+# Expected response when healthy:
+{
+  "status": "healthy",
+  "timestamp": "2025-10-15T14:06:46.186Z",
+  "checks": {
+    "apiKey": true,
+    "apiKeyValid": true,
+    "userAuthenticated": false,  // Expected when no user logged in
+    "userTokenValid": false,     // Expected when no user logged in
+    "databaseConnection": true
+  },
+  "message": "All core systems operational"
+}
+```
+
+#### User Authentication Check (Requires Login)
+```bash
+# Check user authentication (run this after logging in)
+curl -b "cookies.txt" "https://getawayguide.vercel.app/api/getaway-guide/auth/check"
+
+# Expected response when authenticated:
+{
+  "authenticated": true,
+  "valid": true,
+  "canCreatePlaylists": true,
+  "message": "YouTube authentication is working correctly"
+}
+```
+
+### Manual API Testing
+```bash
+# Test API key directly
 curl "https://www.googleapis.com/youtube/v3/search?part=snippet&q=test&key=YOUR_API_KEY"
 
-# Test OAuth token
+# Test OAuth token directly
 curl -H "Authorization: Bearer YOUR_TOKEN" \
   "https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true"
 ```
+
+### Health Check Interpretation
+
+#### System Status: "healthy"
+- ✅ All core components working
+- ✅ API key valid and functional
+- ✅ Database connection established
+- ℹ️ User authentication status doesn't affect system health
+
+#### System Status: "degraded"
+- ❌ Core system issue detected
+- Check: API key missing or invalid
+- Check: Database connection failed
+- Check: Environment variables not set
+
+#### User Authentication States
+| userAuthenticated | userTokenValid | Meaning |
+|------------------|----------------|---------|
+| `false` | `false` | Normal - user not logged in |
+| `true` | `true` | User authenticated and ready |
+| `true` | `false` | User token expired - needs re-auth |
 
 ### Check Quota Usage
 
