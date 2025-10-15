@@ -17,21 +17,58 @@
 		filteredVideos
 	} = $props<Props>();
 
-	// Duration ranges in seconds - covering typical YouTube video lengths
-	const MIN_SECONDS = 0;
-	const MAX_SECONDS = 7200; // 2 hours
-	const STEP = 30; // 30 second increments
+	// Weighted duration scale: 30s increments up to 20min, then 5min increments up to 2hrs
+	const TWENTY_MINUTES = 20 * 60; // 1200 seconds
+	const TWO_HOURS = 2 * 60 * 60; // 7200 seconds
 
-	// Slider values (0 = "no limit", 1+ = actual seconds)
-	let minSliderValue = $state(minDuration ? Math.max(1, Math.floor(minDuration / STEP)) : 0);
-	let maxSliderValue = $state(
-		maxDuration ? Math.max(1, Math.floor(maxDuration / STEP)) : Math.floor(MAX_SECONDS / STEP)
-	);
+	// Create duration breakpoints array
+	function createDurationBreakpoints(): number[] {
+		const breakpoints: number[] = [0]; // Start with 0 (no minimum)
+
+		// 30-second increments from 0 to 20 minutes (40 steps)
+		for (let i = 30; i <= TWENTY_MINUTES; i += 30) {
+			breakpoints.push(i);
+		}
+
+		// 5-minute increments from 25 minutes to 2 hours (21 steps)
+		for (let i = TWENTY_MINUTES + 300; i <= TWO_HOURS; i += 300) {
+			breakpoints.push(i);
+		}
+
+		return breakpoints;
+	}
+
+	const durationBreakpoints = createDurationBreakpoints();
+	const maxSliderSteps = durationBreakpoints.length - 1;
+
+	// Convert duration (seconds) to slider position
+	function durationToSliderValue(duration: number | null): number {
+		if (duration === null || duration === 0) return 0;
+
+		// Find the closest breakpoint
+		for (let i = 1; i < durationBreakpoints.length; i++) {
+			if (duration <= durationBreakpoints[i]) {
+				return i;
+			}
+		}
+		return maxSliderSteps;
+	}
+
+	// Convert slider position to duration (seconds)
+	function sliderValueToDuration(sliderValue: number): number | null {
+		if (sliderValue === 0) return null; // "No minimum"
+		if (sliderValue >= durationBreakpoints.length) return null; // "No maximum"
+		return durationBreakpoints[sliderValue];
+	}
+
+	// Initialize slider values based on props
+	let minSliderValue = $state(durationToSliderValue(minDuration));
+	let maxSliderValue = $state(maxDuration ? durationToSliderValue(maxDuration) : maxSliderSteps);
 
 	// Convert slider values to actual duration values
-	const actualMinDuration = $derived(minSliderValue === 0 ? null : minSliderValue * STEP);
+	const actualMinDuration = $derived(sliderValueToDuration(minSliderValue));
 	const actualMaxDuration = $derived(
-		maxSliderValue === Math.floor(MAX_SECONDS / STEP) ? null : maxSliderValue * STEP
+		maxSliderValue === maxSliderSteps ? null : sliderValueToDuration(maxSliderValue)
 	);
 
 	// Format labels for display
@@ -49,7 +86,7 @@
 
 	// Ensure min is always less than max
 	function handleMinChange() {
-		if (minSliderValue >= maxSliderValue && maxSliderValue < Math.floor(MAX_SECONDS / STEP)) {
+		if (minSliderValue >= maxSliderValue && maxSliderValue < maxSliderSteps) {
 			maxSliderValue = minSliderValue + 1;
 		}
 	}
@@ -59,8 +96,6 @@
 			minSliderValue = maxSliderValue - 1;
 		}
 	}
-
-	const maxSliderSteps = Math.floor(MAX_SECONDS / STEP);
 </script>
 
 <div class="rounded-lg border border-[var(--border)] bg-[var(--card)] p-4">
@@ -98,7 +133,7 @@
 				step="1"
 				bind:value={minSliderValue}
 				oninput={handleMinChange}
-				onfocus={() => (minSliderValue = minSliderValue)} 
+				onfocus={() => (minSliderValue = minSliderValue)}
 				style:z-index={minSliderValue > maxSliderValue - 10 ? 20 : 10}
 				class="min-slider absolute top-0 h-2 w-full cursor-pointer appearance-none bg-transparent focus:outline-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[var(--accent)] [&::-webkit-slider-thumb]:shadow-[var(--shadow)] [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:transition-all [&::-webkit-slider-thumb]:hover:scale-110 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:bg-[var(--accent)] [&::-moz-range-thumb]:transition-all"
 			/>
@@ -131,7 +166,7 @@
 			<button
 				onclick={() => {
 					minSliderValue = 0;
-					maxSliderValue = Math.floor(300 / STEP);
+					maxSliderValue = durationToSliderValue(300); // 5 minutes
 				}}
 				class="rounded-md border border-[var(--border)] px-2 py-1 text-xs hover:shadow-[var(--shadow-sm)]"
 			>
@@ -139,8 +174,8 @@
 			</button>
 			<button
 				onclick={() => {
-					minSliderValue = Math.floor(300 / STEP);
-					maxSliderValue = Math.floor(900 / STEP);
+					minSliderValue = durationToSliderValue(300); // 5 minutes
+					maxSliderValue = durationToSliderValue(900); // 15 minutes
 				}}
 				class="rounded-md border border-[var(--border)] px-2 py-1 text-xs hover:shadow-[var(--shadow-sm)]"
 			>
@@ -148,7 +183,7 @@
 			</button>
 			<button
 				onclick={() => {
-					minSliderValue = Math.floor(900 / STEP);
+					minSliderValue = durationToSliderValue(900); // 15 minutes
 					maxSliderValue = maxSliderSteps;
 				}}
 				class="rounded-md border border-[var(--border)] px-2 py-1 text-xs hover:shadow-[var(--shadow-sm)]"
