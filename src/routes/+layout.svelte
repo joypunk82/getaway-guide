@@ -54,9 +54,19 @@
 
 	<footer class="mt-16 border-t border-[var(--border)] bg-[var(--card)] py-8">
 		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-			<p class="text-center text-sm text-[var(--muted-foreground)]">
-				Getaway Guide &copy; {new Date().getFullYear()}
-			</p>
+			<div class="flex flex-col items-center space-y-4 sm:flex-row sm:justify-between sm:space-y-0">
+				<p class="text-sm text-[var(--muted-foreground)]">
+					Getaway Guide &copy; {new Date().getFullYear()}
+				</p>
+				<div class="flex space-x-6 text-sm">
+					<a href="/privacy-policy" class="text-[var(--muted-foreground)] hover:text-[var(--accent)]">
+						Privacy Policy
+					</a>
+					<a href="/terms-of-service" class="text-[var(--muted-foreground)] hover:text-[var(--accent)]">
+						Terms of Service
+					</a>
+				</div>
+			</div>
 		</div>
 	</footer>
 </div>
