@@ -1,5 +1,7 @@
-import { sql } from '@vercel/postgres';
+import { neon } from '@neondatabase/serverless';
 import type { GetawayGuideSession } from '$lib/types/getaway-guide';
+
+const sql = neon(process.env.DATABASE_URL!);
 
 /**
  * PostgreSQL-based session storage for Getaway Guide
@@ -28,12 +30,12 @@ export async function getSession(sessionId: string): Promise<SessionData | null>
 			AND expires_at > NOW()
 		`;
 
-		if (result.rows.length === 0) {
+		if (result.length === 0) {
 			console.log('[DEBUG] Session not found or expired');
 			return null;
 		}
 
-		const row = result.rows[0];
+		const row = result[0];
 		const sessionData = {
 			id: row.id as string,
 			sessionData: row.session_data as GetawayGuideSession,
@@ -112,8 +114,9 @@ export async function deleteSession(sessionId: string): Promise<void> {
 export async function cleanupExpiredSessions(): Promise<number> {
 	try {
 		const result = await sql`DELETE FROM sessions WHERE expires_at < NOW()`;
-		console.log('[DEBUG] Cleaned up expired sessions:', result.rowCount);
-		return result.rowCount || 0;
+		const deletedCount = result.length || 0;
+		console.log('[DEBUG] Cleaned up expired sessions:', deletedCount);
+		return deletedCount;
 	} catch (error) {
 		console.error('[ERROR] Error cleaning up expired sessions:', error);
 		return 0;
